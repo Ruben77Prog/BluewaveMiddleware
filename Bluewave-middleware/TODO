@@ -1,0 +1,12 @@
+	
+	================================================================================
+LISTA DE TODOs PENDIENTES
+================================================================================
+
+─ DateFromat -> simple DateFormat (En constante privada, no le interesa a nadie de fuera)
+- Al finalizar retornar el componente
+- trim en los criteria de ui para quitar espacio en blanco
+
+Busqueda -> info
+
+

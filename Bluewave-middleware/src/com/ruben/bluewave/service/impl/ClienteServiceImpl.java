@@ -31,10 +31,6 @@ public class ClienteServiceImpl implements ClienteService {
 
 	@Override
 	public Long create(Cliente cliente) throws Exception {
-		if (cliente == null) {
-			logger.error("Cliente es null en create");
-			return null;
-		}
 		
 		Connection c = null;
 		boolean commit = false;
@@ -82,10 +78,7 @@ public class ClienteServiceImpl implements ClienteService {
 
 	@Override
 	public Cliente login(Cliente cliente) throws Exception {
-		if (cliente == null || cliente.getEmail() == null || cliente.getContrasena() == null) {
-			logger.error("Email o contraseña null en login");
-			return null;
-		}
+		
 
 		Connection c = null;
 		boolean commit = false;
@@ -123,10 +116,7 @@ public class ClienteServiceImpl implements ClienteService {
 
 	@Override
 	public List<Cliente> findByEmail(String email) throws Exception {
-		if (email == null || email.trim().isEmpty()) {
-			logger.error("Email null o vacío en findByEmail");
-			return null;
-		}
+		
 
 		Connection c = null;
 		boolean commit = false;
@@ -149,10 +139,7 @@ public class ClienteServiceImpl implements ClienteService {
 
 	@Override
 	public ClienteDTO findById(Long id) throws Exception {
-		if (id == null) {
-			logger.error("Id null en findById");
-			return null;
-		}
+		
 
 		Connection c = null;
 		boolean commit = false;
@@ -175,10 +162,7 @@ public class ClienteServiceImpl implements ClienteService {
 
 	@Override
 	public Results<ClienteDTO> findBy(ClienteCriteria criteria, int from, int pageSize) throws Exception {
-		if (criteria == null) {
-			logger.error("Criteria null en findBy");
-			return null;
-		}
+		
 
 		Connection c = null;
 		boolean commit = false;
@@ -205,10 +189,7 @@ public class ClienteServiceImpl implements ClienteService {
 
 	@Override
 	public List<ClienteDTO> findByCriteria(ClienteCriteria criteria) throws Exception {
-		if (criteria == null) {
-			logger.error("Criteria null en findByCriteria");
-			return null;
-		}
+		
 
 		Results<ClienteDTO> results = findBy(criteria, 1, Integer.MAX_VALUE);
 		return results != null ? results.getPage() : null;
@@ -216,10 +197,7 @@ public class ClienteServiceImpl implements ClienteService {
 
 	@Override
 	public boolean update(Cliente cliente) throws Exception {
-		if (cliente == null || cliente.getId() == null) {
-			logger.error("Cliente null o sin id en update");
-			return false;
-		}
+		
 
 		Connection c = null;
 		boolean commit = false;
@@ -249,10 +227,7 @@ public class ClienteServiceImpl implements ClienteService {
 
 	@Override
 	public boolean updatePassword(Long id, String oldPassword, String newPassword) throws Exception {
-		if (id == null || oldPassword == null || newPassword == null) {
-			logger.error("Parámetros null en updatePassword");
-			return false;
-		}
+		
 
 		Connection c = null;
 		boolean commit = false;
@@ -298,10 +273,7 @@ public class ClienteServiceImpl implements ClienteService {
 
 	@Override
 	public boolean delete(Cliente cliente) throws Exception {
-		if (cliente == null || cliente.getId() == null) {
-			logger.error("Cliente null o sin id en delete");
-			return false;
-		}
+		
 
 		Connection c = null;
 		boolean commit = false;

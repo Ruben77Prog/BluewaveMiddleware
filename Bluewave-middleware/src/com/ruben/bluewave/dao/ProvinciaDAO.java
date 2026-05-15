@@ -53,7 +53,7 @@ public class ProvinciaDAO {
 		return null;
 	}
 
-	public List<Provincia> findBy(Connection c, ProvinciaCriteria criteria) {
+	public List<Provincia> findByCriteria(Connection c, ProvinciaCriteria criteria) {
 
 		PreparedStatement ps = null;
 		ResultSet rs = null;
@@ -105,92 +105,5 @@ public class ProvinciaDAO {
 		return new ArrayList<>();
 	}
 
-	public Provincia create(Connection c, Provincia provincia) {
-
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-
-		try {
-
-			StringBuilder sql = new StringBuilder();
-			sql.append("INSERT INTO provincia (nombre, pais_id) ");
-			sql.append("VALUES (?, ?)");
-			ps = c.prepareStatement(sql.toString(), Statement.RETURN_GENERATED_KEYS);
-
-			int i = 1;
-			ps.setString(i++, provincia.getNombre());
-			ps.setLong(i++, provincia.getPaisId());
-
-			ps.executeUpdate();
-
-			rs = ps.getGeneratedKeys();
-			if (rs.next()) {
-				provincia.setId(rs.getLong(1));
-			}
-
-			return provincia;
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			JDBCUtils.close(rs, ps);
-		}
-		return null;
-	}
-
-	public Provincia update(Connection c, Provincia provincia) {
-		if (provincia == null || provincia.getId() == null)
-			return null;
-
-		PreparedStatement ps = null;
-
-		try {
-
-			StringBuilder sql = new StringBuilder();
-			sql.append("UPDATE provincia SET nombre = ?, pais_id = ? WHERE id = ?");
-			ps = c.prepareStatement(sql.toString());
-
-			int i = 1;
-			ps.setString(i++, provincia.getNombre());
-			ps.setLong(i++, provincia.getPaisId());
-			ps.setLong(i++, provincia.getId());
-
-			int rows = ps.executeUpdate();
-			if (rows > 0) {
-				return provincia;
-			}
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			JDBCUtils.close(null, ps);
-		}
-
-		return null;
-	}
-
-	public boolean delete(Connection c, Long id) {
-		if (id == null)
-			return false;
-
-		PreparedStatement ps = null;
-
-		try {
-
-			StringBuilder sql = new StringBuilder();
-			sql.append("DELETE FROM provincia WHERE id = ?");
-			ps = c.prepareStatement(sql.toString());
-			ps.setLong(1, id);
-
-			int rows = ps.executeUpdate();
-			return rows > 0;
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			JDBCUtils.close(null, ps);
-		}
-
-		return false;
-	}
+	
 }

@@ -14,22 +14,19 @@ import com.ruben.bluewave.util.SQLUtils;
 
 public class EmpleadoDAO {
 
-	private static final String BASE_QUERY =
-			"SELECT id, nombre, apellido1, apellido2, dni, telefono, " +
-			"email, password, fecha_creacion, fecha_baja, ultimo_login, activo, " +
-			"rol_id, genero_id, direccion_id FROM empleado";
+	private static final String BASE_QUERY = "SELECT id, nombre, apellido1, apellido2, dni, telefono, "
+			+ "email, password, fecha_creacion, fecha_baja, ultimo_login, activo, "
+			+ "rol_id, genero_id, direccion_id FROM empleado";
 
 	public EmpleadoDAO() {
 	}
 
-	
-	public EmpleadoDTO findById(Connection c,Long id) {
-		
+	public EmpleadoDTO findById(Connection c, Long id) {
+
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 
 		try {
-			
 
 			StringBuilder sql = new StringBuilder(BASE_QUERY);
 			sql.append(" WHERE id = ?");
@@ -52,16 +49,14 @@ public class EmpleadoDAO {
 		return null;
 	}
 
-	
-	public List<EmpleadoDTO> findByEmail(Connection c,String email) {
-		
+	public List<EmpleadoDTO> findByEmail(Connection c, String email) {
+
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 
 		List<EmpleadoDTO> list = new ArrayList<>();
 
 		try {
-			
 
 			StringBuilder sql = new StringBuilder(BASE_QUERY);
 			sql.append(" WHERE email = ?");
@@ -84,16 +79,14 @@ public class EmpleadoDAO {
 		return list;
 	}
 
-	
 	public List<EmpleadoDTO> findAll(Connection c) {
-		
+
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 
 		List<EmpleadoDTO> list = new ArrayList<>();
 
 		try {
-		
 
 			StringBuilder sql = new StringBuilder(BASE_QUERY);
 			sql.append(" ORDER BY fecha_creacion DESC");
@@ -114,16 +107,14 @@ public class EmpleadoDAO {
 		return list;
 	}
 
+	public List<EmpleadoDTO> findByCriteria(Connection c, EmpleadoCriteria criteria) {
 
-	public List<EmpleadoDTO> findBy(Connection c,EmpleadoCriteria criteria) {
-		
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 
 		List<EmpleadoDTO> list = new ArrayList<>();
 
 		try {
-			
 
 			StringBuilder sql = new StringBuilder(BASE_QUERY);
 
@@ -137,8 +128,7 @@ public class EmpleadoDAO {
 					"%" + criteria.getApellido1() + "%");
 			SQLUtils.addClause(criteria.getApellido2(), condiciones, " UPPER(apellido2) LIKE UPPER(?) ", params,
 					"%" + criteria.getApellido2() + "%");
-			SQLUtils.addClause(criteria.getDni(), condiciones, " dni LIKE ? ", params,
-					"%" + criteria.getDni() + "%");
+			SQLUtils.addClause(criteria.getDni(), condiciones, " dni LIKE ? ", params, "%" + criteria.getDni() + "%");
 			SQLUtils.addClause(criteria.getTelefono(), condiciones, " telefono LIKE ? ", params,
 					"%" + criteria.getTelefono() + "%");
 			SQLUtils.addClause(criteria.getEmail(), condiciones, " UPPER(email) LIKE UPPER(?) ", params,
@@ -178,15 +168,14 @@ public class EmpleadoDAO {
 		return list;
 	}
 
-	public List<EmpleadoDTO> findByDni(Connection c,String dni) {
-		
+	public List<EmpleadoDTO> findByDni(Connection c, String dni) {
+
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 
 		List<EmpleadoDTO> list = new ArrayList<>();
 
 		try {
-			
 
 			StringBuilder sql = new StringBuilder(BASE_QUERY);
 			sql.append(" WHERE dni = ?");
@@ -208,16 +197,15 @@ public class EmpleadoDAO {
 
 		return list;
 	}
-	
+
 	public List<EmpleadoDTO> findAllActivos(Connection c) {
-		
+
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 
 		List<EmpleadoDTO> list = new ArrayList<>();
 
 		try {
-			
 
 			StringBuilder sql = new StringBuilder(BASE_QUERY);
 			sql.append(" WHERE activo = true ORDER BY apellido1, nombre");
@@ -237,14 +225,13 @@ public class EmpleadoDAO {
 
 		return list;
 	}
-	
-	public EmpleadoDTO create(Connection c,EmpleadoDTO dto) {
-		
+
+	public EmpleadoDTO create(Connection c, EmpleadoDTO dto) {
+
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 
 		try {
-			
 
 			StringBuilder sql = new StringBuilder();
 			sql.append("INSERT INTO empleado ");
@@ -286,15 +273,13 @@ public class EmpleadoDAO {
 		return null;
 	}
 
-	
-	public boolean update(Connection c,EmpleadoDTO dto) {
-		if (dto == null || dto.getId() == null) return false;
+	public boolean update(Connection c, EmpleadoDTO dto) {
+		if (dto == null || dto.getId() == null)
+			return false;
 
-		
 		PreparedStatement ps = null;
 
 		try {
-			
 
 			StringBuilder sql = new StringBuilder();
 			sql.append("UPDATE empleado SET ");
@@ -336,14 +321,14 @@ public class EmpleadoDAO {
 		return false;
 	}
 
-	public boolean delete(Connection c,Long id) {
-		if (id == null) return false;
+	public boolean delete(Connection c, Long id) {
+		if (id == null)
+			return false;
 
-		
 		PreparedStatement ps = null;
 
 		try {
-			
+
 			ps = c.prepareStatement("DELETE FROM empleado WHERE id=?");
 			ps.setLong(1, id);
 
@@ -358,7 +343,6 @@ public class EmpleadoDAO {
 		return false;
 	}
 
-	
 	private EmpleadoDTO loadNext(ResultSet rs) {
 		try {
 			EmpleadoDTO dto = new EmpleadoDTO();

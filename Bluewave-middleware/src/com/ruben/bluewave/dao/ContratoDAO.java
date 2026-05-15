@@ -9,6 +9,7 @@ import java.util.List;
 
 import com.ruben.bluewave.dao.criteria.ContratoCriteria;
 import com.ruben.bluewave.model.ContratoDTO;
+import com.ruben.bluewave.model.Results;
 import com.ruben.bluewave.util.JDBCUtils;
 import com.ruben.bluewave.util.SQLUtils;
 
@@ -26,13 +27,12 @@ public class ContratoDAO {
 	public ContratoDAO() {
 	}
 
-	public ContratoDTO findById(Long id) {
-		Connection c = null;
+	public ContratoDTO findById(Connection c, Long id) {
+
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 
 		try {
-			c = JDBCUtils.getConnection();
 
 			String sql = BASE_QUERY + " WHERE con.id = ?";
 			ps = c.prepareStatement(sql);
@@ -53,7 +53,9 @@ public class ContratoDAO {
 		return null;
 	}
 
-	public List<ContratoDTO> findBy(Connection c, ContratoCriteria criteria) {
+	public Results<ContratoDTO> findByCriteria(Connection c, ContratoCriteria criteria, int from, int pageSize) {
+
+		Results<ContratoDTO> results = new Results<>();
 
 		PreparedStatement ps = null;
 		ResultSet rs = null;
@@ -93,9 +95,7 @@ public class ContratoDAO {
 			sql.append(" ORDER BY ").append(criteria.getOrderBy());
 			sql.append(Boolean.FALSE.equals(criteria.getAscDesc()) ? " DESC " : " ASC ");
 
-			System.out.println("SQL: " + sql);
-
-			ps = c.prepareStatement(sql.toString());
+			ps = c.prepareStatement(sql.toString(), ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 
 			int i = 1;
 			for (Object p : params) {
@@ -104,13 +104,25 @@ public class ContratoDAO {
 
 			rs = ps.executeQuery();
 
-			List<ContratoDTO> result = new ArrayList<>();
+			List<ContratoDTO> resultados = new ArrayList<>();
 
-			while (rs.next()) {
-				result.add(loadNext(rs));
+			int filaInicial = Math.max(1, from);
+			if (pageSize > 0 && rs.absolute(filaInicial)) {
+				int count = 0;
+				do {
+					resultados.add(loadNext(rs));
+					count++;
+				} while (count < pageSize && rs.next());
 			}
+			int total = 0;
 
-			return result;
+			if (rs.last()) {
+				total = rs.getRow();
+			}
+			results.setPage(resultados);
+			results.setTotal(total);
+
+			return results;
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -118,7 +130,10 @@ public class ContratoDAO {
 			JDBCUtils.close(rs, ps);
 		}
 
-		return new ArrayList<>();
+		results.setPage(new ArrayList<>());
+		results.setTotal(0);
+
+		return results;
 	}
 
 	public ContratoDTO create(Connection c, ContratoDTO contrato) {

@@ -1,204 +1,269 @@
 package com.ruben.bluewave.service.impl;
 
-import java.util.Date;
+import java.sql.Connection;
 import java.util.List;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.ruben.bluewave.dao.ContratoDAO;
 import com.ruben.bluewave.dao.criteria.ContratoCriteria;
 import com.ruben.bluewave.model.ContratoDTO;
+import com.ruben.bluewave.model.Results;
 import com.ruben.bluewave.service.ContratoService;
 import com.ruben.bluewave.service.MailService;
+import com.ruben.bluewave.util.JDBCUtils;
 
 public class ContratoServiceImpl implements ContratoService {
 
-    private ContratoDAO contratoDAO = null;
-    private MailService mailService = null;
+	private Logger logger = LogManager.getLogger(ContratoServiceImpl.class.getName());
 
-    public ContratoServiceImpl() {
-        contratoDAO = new ContratoDAO();
-        mailService = new MailServiceApacheImpl();
-    }
+	private ContratoDAO contratoDAO = null;
+	private MailService mailService = null;
 
-    @Override
-    public Long create(ContratoDTO contrato) {
-        try {
-            if (contratoDAO == null) {
-                System.err.println("Error: ContratoDAO no está inicializado");
-                contratoDAO = new ContratoDAO();
-            }
+	public ContratoServiceImpl() {
+		contratoDAO = new ContratoDAO();
+		mailService = new MailServiceApacheImpl();
+	}
 
+	@Override
+	public Long create(ContratoDTO contrato) throws Exception {
 
-            contrato = contratoDAO.create(contrato);
+		Connection c = null;
+		boolean commit = false;
 
-            if (contrato != null && contrato.getId() != null) {
-                return contrato.getId();
-            }
+		try {
+			c = JDBCUtils.getConnection();
+			c.setAutoCommit(false);
 
-            return null;
+			if (contratoDAO == null) {
+				contratoDAO = new ContratoDAO();
+			}
 
-        } catch (Exception e) {
-            System.err.println("Error ");
-            e.printStackTrace();
-            return null;
-        }
-    }
+			contrato = contratoDAO.create(c, contrato);
 
-    @Override
-    public ContratoDTO findById(Long id) {
-        try {
-            if (contratoDAO == null) {
-                System.err.println("Error:  ");
-                contratoDAO = new ContratoDAO();
-            }
+			if (contrato != null && contrato.getId() != null) {
+				commit = true;
+				return contrato.getId();
+			}
 
-            return contratoDAO.findById(id);
+			return null;
 
-        } catch (Exception e) {
-            System.err.println("Error ");
-            e.printStackTrace();
-            return null;
-        }
-    }
+		} catch (Exception e) {
+			logger.error("Error creando contrato: {}", e.getMessage(), e);
+			throw e;
 
-    @Override
-    public List<ContratoDTO> findBy(ContratoCriteria criteria,int from, int pageSize) {
-        try {
-            if (contratoDAO == null) {
-                System.err.println("Error: ");
-                contratoDAO = new ContratoDAO();
-            }
+		} finally {
+			JDBCUtils.close(c, commit);
+		}
+	}
 
-            List<ContratoDTO> resultados = contratoDAO.findBy(criteria);
-            return resultados;
+	@Override
+	public ContratoDTO findById(Long id) throws Exception {
 
-        } catch (Exception e) {
-            System.err.println("Error  ");
-            e.printStackTrace();
-            return null;
-        }
-    }
+		Connection c = null;
+		boolean commit = false;
 
-    @Override
-    public List<ContratoDTO> findByCliente(Long clienteId) {
-        try {
-            if (clienteId == null) {
-                System.err.println("Error: clienteId es null");
-                return null;
-            }
+		try {
+			c = JDBCUtils.getConnection();
+			c.setAutoCommit(false);
 
-            ContratoCriteria criteria = new ContratoCriteria();
-            criteria.setClienteId(clienteId);
-            return contratoDAO.findBy(criteria);
+			if (contratoDAO == null) {
+				contratoDAO = new ContratoDAO();
+			}
 
-        } catch (Exception e) {
-            System.err.println("Error ");
-            e.printStackTrace();
-            return null;
-        }
-    }
+			ContratoDTO result = contratoDAO.findById(c, id);
 
-    @Override
-    public List<ContratoDTO> findByNumeroContrato(String numeroContrato) {
-        try {
-            if (numeroContrato == null || numeroContrato.trim().isEmpty()) {
-                System.err.println("Error: numeroContrato es null");
-                return null;
-            }
+			commit = true;
+			return result;
 
-            ContratoCriteria criteria = new ContratoCriteria();
-            criteria.setNumeroContrato(numeroContrato);
-            return contratoDAO.findBy(criteria);
+		} catch (Exception e) {
+			logger.error("Error buscando contrato con id {}: {}", id, e.getMessage(), e);
+			throw e;
 
-        } catch (Exception e) {
-            System.err.println("Error");
-            e.printStackTrace();
-            return null;
-        }
-    }
+		} finally {
+			JDBCUtils.close(c, commit);
+		}
+	}
 
-    @Override
-    public List<ContratoDTO> findByEstado(Long estadoContratoId) {
-        try {
-            if (estadoContratoId == null) {
-                System.err.println("Error");
-                return null;
-            }
+	@Override
+	public Results<ContratoDTO> findByCriteria(ContratoCriteria criteria, int from, int pageSize) throws Exception {
 
-            ContratoCriteria criteria = new ContratoCriteria();
-            criteria.setEstadoContratoId(estadoContratoId);
-            return contratoDAO.findBy(criteria);
+	    Connection c = null;
+	    boolean commit = false;
 
-        } catch (Exception e) {
-            System.err.println("Error ");
-            e.printStackTrace();
-            return null;
-        }
-    }
+	    try {
+	        c = JDBCUtils.getConnection();
+	        c.setAutoCommit(false);
 
-    @Override
-    public boolean update(ContratoDTO contrato) {
-        try {
-            if (contrato == null || contrato.getId() == null) {
-                System.err.println("Error:");
-                return false;
-            }
+	        if (contratoDAO == null) {
+	            contratoDAO = new ContratoDAO();
+	        }
 
-            if (contratoDAO == null) {
-                System.err.println("Error");
-                contratoDAO = new ContratoDAO();
-            }
+	        Results<ContratoDTO> resultados =
+	                contratoDAO.findByCriteria(c, criteria, from, pageSize);
 
-          
+	        commit = true;
+	        return resultados;
 
-            boolean actualizado = contratoDAO.update(contrato);
+	    } catch (Exception e) {
+	        logger.error("Error buscando contratos: {}", e.getMessage(), e);
+	        throw e;
 
-            if (actualizado) {
-                System.out.println("Contrato actualizado: " + contrato.getNumeroContrato());
-            }
+	    } finally {
+	        JDBCUtils.close(c, commit);
+	    }
+	}
 
-            return actualizado;
+	@Override
+	public List<ContratoDTO> findByCliente(Long clienteId) throws Exception {
+	    Connection c = null;
+	    boolean commit = false;
+	    
+	    try {
+	        c = JDBCUtils.getConnection();
+	        c.setAutoCommit(false);
 
-        } catch (Exception e) {
-            System.err.println("Erro ");
-            e.printStackTrace();
-            return false;
-        }
-    }
+	        
 
-   
-    
+	        ContratoCriteria criteria = new ContratoCriteria();
+	        criteria.setClienteId(clienteId);
 
-    
+	       
+	        Results<ContratoDTO> resultados = contratoDAO.findByCriteria(c, criteria, 0, Integer.MAX_VALUE);
+	        commit = true;
+	        return resultados.getPage();
 
-    
-  
+	    } catch (Exception e) {
+	        logger.error("Error buscando contratos por cliente {}: {}", clienteId, e.getMessage(), e);
+	        throw e;
+	    } finally {
+	        JDBCUtils.close(c, commit);
+	    }
+	}
+	@Override
+	public List<ContratoDTO> findByNumeroContrato(String numeroContrato) throws Exception {
+	    Connection c = null;
+	    boolean commit = false;
+	    try {
+	        c = JDBCUtils.getConnection();
+	        c.setAutoCommit(false);
 
 
-    @Override
-    public void delete(Long id) {
-        try {
-            if (id == null) {
-                System.err.println("Error: id es null");
-                return;
-            }
+	        ContratoCriteria criteria = new ContratoCriteria();
+	        criteria.setNumeroContrato(numeroContrato);
 
-            if (contratoDAO == null) {
-                System.err.println("Error:");
-                contratoDAO = new ContratoDAO();
-            }
+	        Results<ContratoDTO> resultados = contratoDAO.findByCriteria(c, criteria, 0, Integer.MAX_VALUE);
+	        commit = true;
+	        return resultados.getPage();
 
-      
-            boolean eliminado = contratoDAO.delete(id);
+	    } catch (Exception e) {
+	        logger.error("Error buscando contrato {}: {}", numeroContrato, e.getMessage(), e);
+	        throw e;
+	    } finally {
+	        JDBCUtils.close(c, commit);
+	    }
+	}
 
-            if (eliminado) {
-                System.out.println("Contrato eliminado con id: " + id);
-            } else {
-                System.err.println("No se pudo eliminar el contrato con id: " + id);
-            }
+	@Override
+	public List<ContratoDTO> findByEstado(Long estadoContratoId) throws Exception {
 
-        } catch (Exception e) {
-            System.err.println("Error en: ");
-            e.printStackTrace();
-        }
-    }
+		Connection c = null;
+		boolean commit = false;
+
+		try {
+			c = JDBCUtils.getConnection();
+			c.setAutoCommit(false);
+
+
+			ContratoCriteria criteria = new ContratoCriteria();
+			criteria.setEstadoContratoId(estadoContratoId);
+
+			Results<ContratoDTO> result = contratoDAO.findByCriteria(c, criteria, 0, Integer.MAX_VALUE);
+
+			commit = true;
+			return result.getPage();
+
+		} catch (Exception e) {
+			logger.error("Error buscando contratos por estado {}: {}", estadoContratoId, e.getMessage(), e);
+			throw e;
+
+		} finally {
+			JDBCUtils.close(c, commit);
+		}
+	}
+
+	@Override
+	public boolean update(ContratoDTO contrato) throws Exception {
+
+		Connection c = null;
+		boolean commit = false;
+
+		try {
+			c = JDBCUtils.getConnection();
+			c.setAutoCommit(false);
+
+			if (contrato == null || contrato.getId() == null) {
+				logger.error("Contrato inválido");
+				return false;
+			}
+
+			if (contratoDAO == null) {
+				contratoDAO = new ContratoDAO();
+			}
+
+			boolean actualizado = contratoDAO.update(c, contrato);
+
+			if (actualizado) {
+				logger.info("Contrato actualizado: {}", contrato.getNumeroContrato());
+				commit = true;
+			}
+
+			return actualizado;
+
+		} catch (Exception e) {
+			logger.error("Error actualizando contrato {}: {}", contrato.getId(), e.getMessage(), e);
+			throw e;
+
+		} finally {
+			JDBCUtils.close(c, commit);
+		}
+	}
+
+	@Override
+	public void delete(Long id) throws Exception {
+
+		Connection c = null;
+		boolean commit = false;
+
+		try {
+			c = JDBCUtils.getConnection();
+			c.setAutoCommit(false);
+
+			if (id == null) {
+				logger.error("id es null");
+				return;
+			}
+
+			if (contratoDAO == null) {
+				contratoDAO = new ContratoDAO();
+			}
+
+			boolean eliminado = contratoDAO.delete(c, id);
+
+			if (eliminado) {
+				logger.info("Contrato eliminado con id: {}", id);
+				commit = true;
+			} else {
+				logger.warn("No se pudo eliminar el contrato con id: {}", id);
+			}
+
+		} catch (Exception e) {
+			logger.error("Error eliminando contrato {}: {}", id, e.getMessage(), e);
+			throw e;
+
+		} finally {
+			JDBCUtils.close(c, commit);
+		}
+	}
 }

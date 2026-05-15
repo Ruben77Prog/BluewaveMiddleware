@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.ruben.bluewave.dao.criteria.ContratoCriteria;
 import com.ruben.bluewave.model.ContratoDTO;
+import com.ruben.bluewave.model.Results;
 
 public interface ContratoService {
 
@@ -13,16 +14,18 @@ public interface ContratoService {
 	 * @param contrato Datos del contrato a insertar.
 	 * @return Id del contrato creado, también lo setea en el objeto, si falla
 	 *         retorna null.
+	 * @throws Exception 
 	 */
-	public Long create(ContratoDTO contrato);
+	public Long create(ContratoDTO contrato) throws Exception;
 
 	/**
 	 * Busca un contrato por su id.
 	 * 
 	 * @param id
 	 * @return Contrato encontrado o null si no existe.
+	 * @throws Exception 
 	 */
-	public ContratoDTO findById(Long id);
+	public ContratoDTO findById(Long id) throws Exception;
 
 	/**
 	 * Búsqueda estructurada de contratos.
@@ -30,7 +33,7 @@ public interface ContratoService {
 	 * @param criteria Encapsula los criterios de búsqueda.
 	 * @return Lista de contratos encontrados.
 	 */
-	public List<ContratoDTO> findBy(ContratoCriteria criteria, int from, int pageSize);
+	public Results<ContratoDTO> findByCriteria(ContratoCriteria criteria, int from, int pageSize)throws Exception;
 
 	/**
 	 * Busca contratos por cliente.
@@ -38,7 +41,7 @@ public interface ContratoService {
 	 * @param clienteId
 	 * @return Lista de contratos del cliente.
 	 */
-	public List<ContratoDTO> findByCliente(Long clienteId);
+	public List<ContratoDTO> findByCliente(Long clienteId)throws Exception;
 
 	/**
 	 * Busca contratos por número de contrato.
@@ -46,7 +49,7 @@ public interface ContratoService {
 	 * @param numeroContrato
 	 * @return Lista de contratos que coincidan.
 	 */
-	public List<ContratoDTO> findByNumeroContrato(String numeroContrato);
+	public List<ContratoDTO> findByNumeroContrato(String numeroContrato)throws Exception;
 
 	/**
 	 * Busca contratos por estado.
@@ -54,7 +57,7 @@ public interface ContratoService {
 	 * @param estadoContratoId
 	 * @return Lista de contratos con ese estado.
 	 */
-	public List<ContratoDTO> findByEstado(Long estadoContratoId);
+	public List<ContratoDTO> findByEstado(Long estadoContratoId)throws Exception;
 
 	/**
 	 * Actualiza todos los datos de un contrato, en base a su id.
@@ -62,13 +65,14 @@ public interface ContratoService {
 	 * @param contrato Datos a actualizar.
 	 * @return Si se ha podido actualizar.
 	 */
-	public boolean update(ContratoDTO contrato);
+	public boolean update(ContratoDTO contrato)throws Exception;
 
 	/**
 	 * Elimina un contrato.
 	 * 
 	 * @param id
+	 * @throws Exception 
 	 */
-	public void delete(Long id);
+	public void delete(Long id) throws Exception;
 
 }

@@ -17,10 +17,13 @@ import com.ruben.bluewave.util.SQLUtils;
 public class IncidenciaDAO {
 
 	private static final String BASE_QUERY = "SELECT i.id, i.numero_incidencia, i.titulo, i.descripcion, "
-			+ "ti.nombre AS tipo_incidencia_nombre, "
-			+ "i.contrato_id, con.numero_contrato AS contrato_numero, c.nombre AS cliente_nombre, "
+			+ "i.fecha_incidencia, i.fecha_resolucion, i.horas_estimadas, i.horas_reales, i.coste_reparacion, "
+			+ "ti.id AS tipo_incidencia_id, ti.nombre AS tipo_incidencia_nombre, "
+			+ "i.contrato_id, con.numero_contrato AS contrato_numero, "
+			+ "c.id AS cliente_id, c.nombre AS cliente_nombre, "
 			+ "i.estado_incidencia_id, ei.nombre AS estado_incidencia_nombre, "
-			+ "i.creado_por_empleado_id, creador.nombre AS empleado_creador_nombre " + "FROM incidencia i "
+			+ "i.creado_por_empleado_id, creador.nombre AS empleado_creador_nombre, "
+			+ "i.fecha_creacion, i.fecha_actualizacion " + "FROM incidencia i "
 			+ "INNER JOIN tipo_incidencia ti ON i.tipo_incidencia_id = ti.id "
 			+ "INNER JOIN estado_incidencia ei ON i.estado_incidencia_id = ei.id "
 			+ "INNER JOIN contrato con ON i.contrato_id = con.id " + "INNER JOIN cliente c ON con.cliente_id = c.id "
@@ -89,22 +92,19 @@ public class IncidenciaDAO {
 	}
 
 	public Results<IncidenciaDTO> findByCriteria(Connection c, IncidenciaCriteria criteria, int from, int pageSize) {
-
 		PreparedStatement ps = null;
+		PreparedStatement psCount = null;
 		ResultSet rs = null;
-
+		ResultSet rsCount = null;
 		Results<IncidenciaDTO> results = new Results<>();
 
 		try {
-
 			StringBuilder sqlBuilder = new StringBuilder(BASE_QUERY);
-
 			List<String> condiciones = new ArrayList<>();
 			List<Object> parametros = new ArrayList<>();
 
-			// Lógica de filtrado
+			// Filtros básicos
 			SQLUtils.addClause(criteria.getId(), condiciones, " i.id = ? ", parametros, criteria.getId());
-
 			if (criteria.getId() == null) {
 				SQLUtils.addClause(criteria.getNumeroIncidencia(), condiciones, " i.numero_incidencia LIKE ? ",
 						parametros, "%" + criteria.getNumeroIncidencia() + "%");
@@ -118,50 +118,91 @@ public class IncidenciaDAO {
 						parametros, criteria.getEstadoIncidenciaId());
 			}
 
+			// Filtros por campos de tablas relacionadas (todos con INNER JOIN)
+			SQLUtils.addClause(criteria.getContratoNumero(), condiciones, " con.numero_contrato LIKE ? ", parametros,
+					"%" + criteria.getContratoNumero() + "%");
+			SQLUtils.addClause(criteria.getClienteNombre(), condiciones, " UPPER(c.nombre) LIKE UPPER(?) ", parametros,
+					"%" + criteria.getClienteNombre() + "%");
+
+			// Filtro por nombre de empleado asignado (en nombre o apellido)
+			if (criteria.getEmpleadoAsignadoNombre() != null
+					&& !criteria.getEmpleadoAsignadoNombre().trim().isEmpty()) {
+				condiciones.add(" (UPPER(emp_asig.nombre) LIKE UPPER(?) OR UPPER(emp_asig.apellido1) LIKE UPPER(?)) ");
+				String like = "%" + criteria.getEmpleadoAsignadoNombre() + "%";
+				parametros.add(like);
+				parametros.add(like);
+			}
+
+			// Filtros de fecha
+			if (criteria.getFechaDesde() != null) {
+				condiciones.add(" i.fecha_incidencia >= ? ");
+				parametros.add(new java.sql.Timestamp(criteria.getFechaDesde().getTime()));
+			}
+			if (criteria.getFechaHasta() != null) {
+				condiciones.add(" i.fecha_incidencia <= ? ");
+				parametros.add(new java.sql.Timestamp(criteria.getFechaHasta().getTime()));
+			}
+
 			if (!condiciones.isEmpty()) {
-				sqlBuilder.append(" WHERE ");
-				sqlBuilder.append(String.join(" AND ", condiciones));
+				sqlBuilder.append(" WHERE ").append(String.join(" AND ", condiciones));
 			}
 
-			
-			sqlBuilder.append(" ORDER BY ").append(criteria.getOrderBy())
-					.append(Boolean.FALSE.equals(criteria.getAscDesc()) ? " DESC " : " ASC ");
+			// Ordenación
+			sqlBuilder.append(" ORDER BY ").append(criteria.getOrderBy());
+			sqlBuilder.append(Boolean.FALSE.equals(criteria.getAscDesc()) ? " DESC " : " ASC ");
 
-			
-			ps = c.prepareStatement(sqlBuilder.toString(), ResultSet.TYPE_SCROLL_INSENSITIVE,
-					ResultSet.CONCUR_READ_ONLY);
+			// Paginación con LIMIT y OFFSET
+			String sqlPaginado = sqlBuilder.toString() + " LIMIT ? OFFSET ?";
+			ps = c.prepareStatement(sqlPaginado);
 
-			int i = 1;
-			for (Object param : parametros) {
-				ps.setObject(i++, param);
+			int idx = 1;
+			for (Object p : parametros) {
+				ps.setObject(idx++, p);
 			}
+			ps.setInt(idx++, pageSize);
+			ps.setInt(idx++, from);
 
 			rs = ps.executeQuery();
-			List<IncidenciaDTO> resultsPage = new ArrayList<>();
+			List<IncidenciaDTO> pageList = new ArrayList<>();
+			while (rs.next()) {
+				pageList.add(loadNext(rs));
+			}
+			results.setPage(pageList);
 
-			if (from >= 1) {
-				int count = 0;
-				if (rs.absolute(from)) {
-					do {
-						resultsPage.add(loadNext(rs));
-						++count;
-					} while (count < pageSize && rs.next());
-				}
+			StringBuilder countBuilder = new StringBuilder("SELECT COUNT(*) FROM incidencia i ");
+			countBuilder.append("INNER JOIN tipo_incidencia ti ON i.tipo_incidencia_id = ti.id ")
+					.append("INNER JOIN estado_incidencia ei ON i.estado_incidencia_id = ei.id ")
+					.append("INNER JOIN contrato con ON i.contrato_id = con.id ")
+					.append("INNER JOIN cliente c ON con.cliente_id = c.id ")
+					.append("INNER JOIN empleado creador ON i.creado_por_empleado_id = creador.id ");
+
+			if (!condiciones.isEmpty()) {
+				countBuilder.append(" WHERE ").append(String.join(" AND ", condiciones));
 			}
 
-			int totalResults = SQLUtils.getTotalRows(rs);
-
-			results.setPage(resultsPage);
-			results.setTotal(totalResults);
+			psCount = c.prepareStatement(countBuilder.toString());
+			idx = 1;
+			for (Object p : parametros) {
+				psCount.setObject(idx++, p);
+			}
+			rsCount = psCount.executeQuery();
+			int total = 0;
+			if (rsCount.next()) {
+				total = rsCount.getInt(1);
+			}
+			results.setTotal(total);
 
 			return results;
 
 		} catch (Exception e) {
 			e.printStackTrace();
+			results.setPage(new ArrayList<>());
+			results.setTotal(0);
+			return results;
 		} finally {
 			JDBCUtils.close(rs, ps);
+			JDBCUtils.close(rsCount, psCount);
 		}
-		return results;
 	}
 
 	public List<IncidenciaDTO> findAll(Connection c) {
@@ -324,40 +365,31 @@ public class IncidenciaDAO {
 		return false;
 	}
 
-	private IncidenciaDTO loadNext(ResultSet rs) {
-		try {
-			IncidenciaDTO incidencia = new IncidenciaDTO();
+	private IncidenciaDTO loadNext(ResultSet rs) throws Exception {
+		IncidenciaDTO incidencia = new IncidenciaDTO();
+		incidencia.setId(rs.getLong("id"));
+		incidencia.setNumeroIncidencia(rs.getString("numero_incidencia"));
+		incidencia.setTitulo(rs.getString("titulo"));
+		incidencia.setDescripcion(rs.getString("descripcion"));
+		incidencia.setFechaIncidencia(rs.getTimestamp("fecha_incidencia"));
+		incidencia.setFechaResolucion(rs.getTimestamp("fecha_resolucion"));
+		incidencia.setHorasEstimadas(rs.getDouble("horas_estimadas"));
+		incidencia.setHorasReales(rs.getDouble("horas_reales"));
+		incidencia.setCosteReparacion(rs.getDouble("coste_reparacion"));
 
-			incidencia.setId(rs.getLong("id"));
-			incidencia.setNumeroIncidencia(rs.getString("numero_incidencia"));
-			incidencia.setTitulo(rs.getString("titulo"));
-			incidencia.setDescripcion(rs.getString("descripcion"));
-			incidencia.setFechaIncidencia(rs.getTimestamp("fecha_incidencia"));
-			incidencia.setFechaResolucion(rs.getTimestamp("fecha_resolucion"));
-			incidencia.setHorasEstimadas(rs.getDouble("horas_estimadas"));
-			incidencia.setHorasReales(rs.getDouble("horas_reales"));
-			incidencia.setCosteReparacion(rs.getDouble("coste_reparacion"));
+		incidencia.setTipoIncidenciaId(rs.getLong("tipo_incidencia_id"));
+		incidencia.setTipoIncidenciaNombre(rs.getString("tipo_incidencia_nombre"));
+		incidencia.setContratoId(rs.getLong("contrato_id"));
+		incidencia.setContratoNumero(rs.getString("contrato_numero"));
+		incidencia.setClienteNombre(rs.getString("cliente_nombre"));
+		incidencia.setEstadoIncidenciaId(rs.getLong("estado_incidencia_id"));
+		incidencia.setEstadoIncidenciaNombre(rs.getString("estado_incidencia_nombre"));
 
-			incidencia.setTipoIncidenciaId(rs.getLong("tipo_incidencia_id"));
-			incidencia.setContratoId(rs.getLong("contrato_id"));
-			incidencia.setEstadoIncidenciaId(rs.getLong("estado_incidencia_id"));
+		incidencia.setEmpleadoCreadorId(rs.getLong("creado_por_empleado_id"));
+		incidencia.setEmpleadoCreadorNombre(rs.getString("empleado_creador_nombre"));
 
-			incidencia.setTipoIncidenciaNombre(rs.getString("tipo_incidencia_nombre"));
-			incidencia.setContratoNumero(rs.getString("contrato_numero"));
-			incidencia.setClienteNombre(rs.getString("cliente_nombre"));
-			incidencia.setEstadoIncidenciaNombre(rs.getString("estado_incidencia_nombre"));
-			incidencia.setEmpleadoAsignadoId(rs.getLong("empleado_asignado_id"));
-			incidencia.setEmpleadoAsignadoNombre(rs.getString("empleado_asignado_nombre"));
-			incidencia.setEmpleadoAsignadoApellido(rs.getString("empleado_asignado_apellido"));
-			incidencia.setEmpleadoCreadorId(rs.getLong("creado_por_empleado_id"));
-			incidencia.setEmpleadoCreadorNombre(rs.getString("empleado_creador_nombre"));
-			incidencia.setFechaCreacion(rs.getTimestamp("fecha_creacion"));
-			incidencia.setFechaResolucion(rs.getTimestamp("fecha_actualizacion"));
-
-			return incidencia;
-		} catch (Exception e) {
-			e.printStackTrace();
-			return null;
-		}
+		incidencia.setFechaCreacion(rs.getTimestamp("fecha_creacion"));
+		incidencia.setFechaActualizacion(rs.getTimestamp("fecha_actualizacion"));
+		return incidencia;
 	}
 }

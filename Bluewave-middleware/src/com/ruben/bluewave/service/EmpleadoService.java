@@ -40,7 +40,7 @@ public interface EmpleadoService {
 	/**
 	 * Busca empleados por correo.
 	 */
-	List<EmpleadoDTO> findByCorreo(String correo) throws Exception;
+	List<EmpleadoDTO> findByEmail(String email) throws Exception;
 
 	/**
 	 * Busca empleados por rol.
@@ -79,11 +79,15 @@ public interface EmpleadoService {
 
 	/**
 	 * Login del empleado.
+	 * @throws Exception 
 	 */
-	EmpleadoDTO login(String correo, String contrasena);
+	EmpleadoDTO login(String correo, String contrasena) throws Exception;
 
 	/**
 	 * Elimina un empleado.
+	 * @throws Exception 
 	 */
-	boolean delete(Long id);
+	boolean delete(Long id) throws Exception;
+
+
 }

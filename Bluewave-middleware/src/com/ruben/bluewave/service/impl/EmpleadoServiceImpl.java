@@ -87,24 +87,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         }
     }
 
-    @Override
-    public List<EmpleadoDTO> findByDni(String dni) throws Exception {
-        Connection c = null;
-        boolean commit = false;
-        try {
-            c = JDBCUtils.getConnection();
-            c.setAutoCommit(false);
-            List<EmpleadoDTO> result = empleadoDAO.findByDni(c, dni);
-            commit = true;
-            return result;
-        } catch (Exception e) {
-            logger.error("Error buscando empleados por dni {}: {}", dni, e.getMessage(), e);
-            throw e;
-        } finally {
-            JDBCUtils.close(c, commit);
-        }
-    }
-
+  
     @Override
     public List<EmpleadoDTO> findAll() throws Exception {
         Connection c = null;
@@ -123,24 +106,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         }
     }
 
-    @Override
-    public List<EmpleadoDTO> findAllActivos() throws Exception {
-        Connection c = null;
-        boolean commit = false;
-        try {
-            c = JDBCUtils.getConnection();
-            c.setAutoCommit(false);
-            List<EmpleadoDTO> result = empleadoDAO.findAllActivos(c);
-            commit = true;
-            return result;
-        } catch (Exception e) {
-            logger.error("Error listando empleados activos: {}", e.getMessage(), e);
-            throw e;
-        } finally {
-            JDBCUtils.close(c, commit);
-        }
-    }
-
+ 
    
 
     @Override
@@ -297,7 +263,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
     }
 
     @Override
-    public Results<EmpleadoDTO> findBy(EmpleadoCriteria criteria, int from, int pageSize) throws Exception {
+    public Results<EmpleadoDTO> findByCriteria(EmpleadoCriteria criteria, int from, int pageSize) throws Exception {
         Connection c = null;
         boolean commit = false;
         try {
@@ -315,11 +281,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
     }
 
    
-    @Override
-    public List<EmpleadoDTO> findByCorreo(String correo) throws Exception {
-        return findByEmail(correo);
-    }
-
+   
     @Override
     public List<EmpleadoDTO> findByRol(Long rolId) throws Exception {
         Connection c = null;
@@ -327,11 +289,13 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         try {
             c = JDBCUtils.getConnection();
             c.setAutoCommit(false);
+            
             EmpleadoCriteria criteria = new EmpleadoCriteria();
             criteria.setRolId(rolId);
-            List<EmpleadoDTO> result = empleadoDAO.findBy(c, criteria);
+            
+            Results<EmpleadoDTO> results = empleadoDAO.findByCriteria(c, criteria, 0, Integer.MAX_VALUE);
             commit = true;
-            return result;
+            return results.getPage(); 
         } catch (Exception e) {
             logger.error("Error buscando empleados por rol {}: {}", rolId, e.getMessage(), e);
             throw e;
@@ -339,11 +303,23 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             JDBCUtils.close(c, commit);
         }
     }
-
     @Override
     public List<EmpleadoDTO> findActivos() throws Exception {
-        return findAllActivos();
+        Connection c = null;
+        boolean commit = false;
+        try {
+            c = JDBCUtils.getConnection();
+            c.setAutoCommit(false);
+            List<EmpleadoDTO> result = empleadoDAO.findAllActivos(c);
+            commit = true;
+            return result;
+        } catch (Exception e) {
+            logger.error("Error buscando empleados activos: {}", e.getMessage(), e);
+            throw e;
+        } finally {
+            JDBCUtils.close(c, commit);
+        }
     }
-
+	
 	
 }

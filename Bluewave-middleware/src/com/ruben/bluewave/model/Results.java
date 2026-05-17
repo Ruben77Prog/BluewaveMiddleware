@@ -1,5 +1,6 @@
 package com.ruben.bluewave.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Results<T> {
@@ -8,6 +9,7 @@ public class Results<T> {
 	private int total = 0;
 
 	public Results() {
+		page = new ArrayList<T>();
 	}
 
 	public int getTotal() {

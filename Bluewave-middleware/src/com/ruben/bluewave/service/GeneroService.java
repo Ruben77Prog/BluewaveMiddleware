@@ -4,6 +4,7 @@ import java.util.List;
 import com.ruben.bluewave.model.Genero;
 
 public interface GeneroService {
-    List<Genero> findAll();
-    Genero findById(Long id);
+	List<Genero> findAll() throws Exception;
+
+	Genero findById(Long id) throws Exception;
 }

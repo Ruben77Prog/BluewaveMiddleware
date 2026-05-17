@@ -3,129 +3,67 @@ package com.ruben.bluewave.dao.criteria;
 import java.util.Date;
 
 public class IncidenciaCriteria {
-	public final String ORDER_BY_NUMERO = " i.numero_incidencia ";
-	public final String ORDER_BY_TITULO = " i.titulo ";
-	public final String ORDER_BY_FECHA_INCIDENCIA = " i.fecha_incidencia ";
-	public final String ORDER_BY_ESTADO = " estado_incidencia_nombre ";
 
-	private Long id = null;
-	private String numeroIncidencia = null;
-	private String titulo = null;
-	private Date fechaIncidenciaDesde = null;
-	private Date fechaIncidenciaHasta = null;
-	private Long tipoIncidenciaId = null;
-	private Long contratoId = null;
-	private Long estadoIncidenciaId = null;
-	private Long empleadoAsignadoId = null;
-	private Long nivelIncidenciaId = null;
-	private Long empleadoCreadorId = null;
-	private String orderBy = ORDER_BY_FECHA_INCIDENCIA;
-	private Boolean ascDesc = false;
+    public static final String ORDER_BY_ID = " i.id ";
+    public static final String ORDER_BY_NUMERO = " i.numero_incidencia ";
+    public static final String ORDER_BY_FECHA = " i.fecha_incidencia ";
 
-	public IncidenciaCriteria() {
-	}
+    private Long id;
+    private String numeroIncidencia;
+    private String titulo;
+    private Long tipoIncidenciaId;
+    private Long contratoId;
+    private Long estadoIncidenciaId;
+    
+   
+    private String contratoNumero;
+    private String clienteNombre;
+    private String empleadoAsignadoNombre;
+    
+  
+    private Date fechaDesde;
+    private Date fechaHasta;
+    
+    private String orderBy = ORDER_BY_FECHA;
+    private Boolean ascDesc = false;   
 
-	public Long getId() {
-		return id;
-	}
+ 
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+    public String getNumeroIncidencia() { return numeroIncidencia; }
+    public void setNumeroIncidencia(String numeroIncidencia) { this.numeroIncidencia = numeroIncidencia; }
 
-	public String getNumeroIncidencia() {
-		return numeroIncidencia;
-	}
+    public String getTitulo() { return titulo; }
+    public void setTitulo(String titulo) { this.titulo = titulo; }
 
-	public void setNumeroIncidencia(String numeroIncidencia) {
-		this.numeroIncidencia = numeroIncidencia;
-	}
+    public Long getTipoIncidenciaId() { return tipoIncidenciaId; }
+    public void setTipoIncidenciaId(Long tipoIncidenciaId) { this.tipoIncidenciaId = tipoIncidenciaId; }
 
-	public String getTitulo() {
-		return titulo;
-	}
+    public Long getContratoId() { return contratoId; }
+    public void setContratoId(Long contratoId) { this.contratoId = contratoId; }
 
-	public void setTitulo(String titulo) {
-		this.titulo = titulo;
-	}
+    public Long getEstadoIncidenciaId() { return estadoIncidenciaId; }
+    public void setEstadoIncidenciaId(Long estadoIncidenciaId) { this.estadoIncidenciaId = estadoIncidenciaId; }
 
-	public Date getFechaIncidenciaDesde() {
-		return fechaIncidenciaDesde;
-	}
+    public String getContratoNumero() { return contratoNumero; }
+    public void setContratoNumero(String contratoNumero) { this.contratoNumero = contratoNumero; }
 
-	public void setFechaIncidenciaDesde(Date fechaIncidenciaDesde) {
-		this.fechaIncidenciaDesde = fechaIncidenciaDesde;
-	}
+    public String getClienteNombre() { return clienteNombre; }
+    public void setClienteNombre(String clienteNombre) { this.clienteNombre = clienteNombre; }
 
-	public Date getFechaIncidenciaHasta() {
-		return fechaIncidenciaHasta;
-	}
+    public String getEmpleadoAsignadoNombre() { return empleadoAsignadoNombre; }
+    public void setEmpleadoAsignadoNombre(String empleadoAsignadoNombre) { this.empleadoAsignadoNombre = empleadoAsignadoNombre; }
 
-	public void setFechaIncidenciaHasta(Date fechaIncidenciaHasta) {
-		this.fechaIncidenciaHasta = fechaIncidenciaHasta;
-	}
+    public Date getFechaDesde() { return fechaDesde; }
+    public void setFechaDesde(Date fechaDesde) { this.fechaDesde = fechaDesde; }
 
-	public Long getTipoIncidenciaId() {
-		return tipoIncidenciaId;
-	}
+    public Date getFechaHasta() { return fechaHasta; }
+    public void setFechaHasta(Date fechaHasta) { this.fechaHasta = fechaHasta; }
 
-	public void setTipoIncidenciaId(Long tipoIncidenciaId) {
-		this.tipoIncidenciaId = tipoIncidenciaId;
-	}
+    public String getOrderBy() { return orderBy; }
+    public void setOrderBy(String orderBy) { this.orderBy = orderBy; }
 
-	public Long getContratoId() {
-		return contratoId;
-	}
-
-	public void setContratoId(Long contratoId) {
-		this.contratoId = contratoId;
-	}
-
-	public Long getEstadoIncidenciaId() {
-		return estadoIncidenciaId;
-	}
-
-	public void setEstadoIncidenciaId(Long estadoIncidenciaId) {
-		this.estadoIncidenciaId = estadoIncidenciaId;
-	}
-
-	public Long getEmpleadoAsignadoId() {
-		return empleadoAsignadoId;
-	}
-
-	public void setEmpleadoAsignadoId(Long empleadoAsignadoId) {
-		this.empleadoAsignadoId = empleadoAsignadoId;
-	}
-
-	public Long getNivelIncidenciaId() {
-		return nivelIncidenciaId;
-	}
-
-	public void setNivelIncidenciaId(Long nivelIncidenciaId) {
-		this.nivelIncidenciaId = nivelIncidenciaId;
-	}
-
-	public Long getEmpleadoCreadorId() {
-		return empleadoCreadorId;
-	}
-
-	public void setEmpleadoCreadorId(Long empleadoCreadorId) {
-		this.empleadoCreadorId = empleadoCreadorId;
-	}
-
-	public String getOrderBy() {
-		return orderBy;
-	}
-
-	public void setOrderBy(String orderBy) {
-		this.orderBy = orderBy;
-	}
-
-	public Boolean getAscDesc() {
-		return ascDesc;
-	}
-
-	public void setAscDesc(Boolean ascDesc) {
-		this.ascDesc = ascDesc;
-	}
+    public Boolean getAscDesc() { return ascDesc; }
+    public void setAscDesc(Boolean ascDesc) { this.ascDesc = ascDesc; }
 }

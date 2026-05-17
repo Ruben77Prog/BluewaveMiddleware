@@ -7,17 +7,29 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.ruben.bluewave.dao.criteria.EmpleadoCriteria;
 import com.ruben.bluewave.model.EmpleadoDTO;
+import com.ruben.bluewave.model.Results;
 import com.ruben.bluewave.util.JDBCUtils;
 import com.ruben.bluewave.util.SQLUtils;
 
 public class EmpleadoDAO {
 
-	private static final String BASE_QUERY = "SELECT id, nombre, apellido1, apellido2, dni, telefono, "
-			+ "email, password, fecha_creacion, fecha_baja, ultimo_login, activo, "
-			+ "rol_id, genero_id, direccion_id FROM empleado";
+	private static Logger logger = LogManager.getLogger(EmpleadoDAO.class.getName());
 
+	private static final String BASE_QUERY = 
+		    "SELECT e.id, e.nombre, e.apellido1, e.apellido2, e.dni, e.telefono, "
+		    + "e.email, e.password, e.fecha_creacion, e.fecha_baja, e.ultimo_login, e.activo, "
+		    + "e.rol_id, e.genero_id, e.direccion_id, "
+		    + "r.nombre AS rol_nombre, "
+		    + "g.nombre AS genero_nombre "
+		    + "FROM empleado e "
+		    + "LEFT JOIN rol r ON e.rol_id = r.id "
+		    + "LEFT JOIN genero g ON e.genero_id = g.id";
+	
 	public EmpleadoDAO() {
 	}
 
@@ -107,12 +119,12 @@ public class EmpleadoDAO {
 		return list;
 	}
 
-	public List<EmpleadoDTO> findByCriteria(Connection c, EmpleadoCriteria criteria) {
+	public Results<EmpleadoDTO> findByCriteria(Connection c, EmpleadoCriteria criteria, int from, int pageSize) {
 
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 
-		List<EmpleadoDTO> list = new ArrayList<>();
+		Results<EmpleadoDTO> results = new Results<>();
 
 		try {
 
@@ -140,34 +152,67 @@ public class EmpleadoDAO {
 					criteria.getDireccionId());
 
 			if (!condiciones.isEmpty()) {
-				sql.append(" WHERE ").append(String.join(" AND ", condiciones));
-			}
+	            sql.append(" WHERE ").append(String.join(" AND ", condiciones));
+	        }
 
-			sql.append(" ORDER BY ").append(criteria.getOrderBy());
-			sql.append(Boolean.FALSE.equals(criteria.getAscDesc()) ? " DESC " : " ASC ");
+	        
+	        sql.append(" ORDER BY ").append(criteria.getOrderBy());
+	        sql.append(Boolean.FALSE.equals(criteria.getAscDesc()) ? " DESC " : " ASC ");
 
-			ps = c.prepareStatement(sql.toString());
+	       
+	        sql.append(" LIMIT ? OFFSET ? ");
+	        params.add(pageSize);
+	        params.add(from);
 
-			int i = 1;
-			for (Object p : params) {
-				ps.setObject(i++, p);
-			}
+	        logger.debug("SQL: " + sql.toString());
+	        logger.debug("Params: " + params);
 
-			rs = ps.executeQuery();
+	        ps = c.prepareStatement(sql.toString());
+	        int idx = 1;
+	        for (Object p : params) {
+	            ps.setObject(idx++, p);
+	        }
 
-			while (rs.next()) {
-				list.add(loadNext(rs));
-			}
+	        rs = ps.executeQuery();
+	        List<EmpleadoDTO> resultados = new ArrayList<>();
+	        while (rs.next()) {
+	            resultados.add(loadNext(rs));
+	        }
+	        results.setPage(resultados);
 
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			JDBCUtils.close(rs, ps);
-		}
+	        
+	        StringBuilder countSql = new StringBuilder("SELECT COUNT(*) FROM empleado e ");
+	     
+	        if (!condiciones.isEmpty()) {
+	            countSql.append(" WHERE ").append(String.join(" AND ", condiciones));
+	        }
 
-		return list;
+	        PreparedStatement psCount = c.prepareStatement(countSql.toString());
+	        idx = 1;
+	        for (Object p : params) {
+	            
+	            if (idx <= condiciones.size()) {
+	                psCount.setObject(idx++, p);
+	            }
+	        }
+	        ResultSet rsCount = psCount.executeQuery();
+	        int total = 0;
+	        if (rsCount.next()) {
+	            total = rsCount.getInt(1);
+	        }
+	        results.setTotal(total);
+	        rsCount.close();
+	        psCount.close();
+
+	        return results;
+
+	    } catch (Exception e) {
+	        logger.error(e.getMessage() + ": " + criteria, e);
+	        return results;
+	    } finally {
+	        JDBCUtils.close(rs, ps);
+	    }
 	}
-
 	public List<EmpleadoDTO> findByDni(Connection c, String dni) {
 
 		PreparedStatement ps = null;

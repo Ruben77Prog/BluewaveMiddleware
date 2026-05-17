@@ -161,7 +161,7 @@ public class ClienteServiceImpl implements ClienteService {
 	}
 
 	@Override
-	public Results<ClienteDTO> findBy(ClienteCriteria criteria, int from, int pageSize) throws Exception {
+	public Results<ClienteDTO> findByCriteria(ClienteCriteria criteria, int from, int pageSize) throws Exception {
 		
 
 		Connection c = null;
@@ -187,13 +187,7 @@ public class ClienteServiceImpl implements ClienteService {
 		}
 	}
 
-	@Override
-	public List<ClienteDTO> findByCriteria(ClienteCriteria criteria) throws Exception {
-		
-
-		Results<ClienteDTO> results = findBy(criteria, 1, Integer.MAX_VALUE);
-		return results != null ? results.getPage() : null;
-	}
+	
 
 	@Override
 	public boolean update(Cliente cliente) throws Exception {

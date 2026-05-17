@@ -75,13 +75,8 @@ public interface ClienteService {
 	 * @param pageSize
 	 * @return clientes encontrados
 	 */
-	public Results<ClienteDTO> findBy(ClienteCriteria criteria, int from, int pageSize) throws Exception;
+	public Results<ClienteDTO> findByCriteria(ClienteCriteria criteria, int from, int pageSize) throws Exception;
 
-	/**
-	 * Busca clientes segun los criterios indicados sin paginacion explicita.
-	 *
-	 * @param criteria
-	 * @return clientes encontrados
-	 */
-	public List<ClienteDTO> findByCriteria(ClienteCriteria criteria) throws Exception;
+	
+	
 }

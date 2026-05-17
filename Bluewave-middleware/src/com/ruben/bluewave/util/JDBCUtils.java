@@ -16,7 +16,7 @@ public class JDBCUtils {
 		try {
 			// Carga el driver JDBC
 			Class.forName("com.mysql.cj.jdbc.Driver");
-			return DriverManager.getConnection("jdbc:mysql://localhost:3308/bluewave", "root", "abc123.");
+			return DriverManager.getConnection("jdbc:mysql://localhost:3306/bluewave", "root", "abc123.");
 		} catch (Exception e) {
 			logger.fatal(e);
 		}

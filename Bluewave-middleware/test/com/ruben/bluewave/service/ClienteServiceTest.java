@@ -60,7 +60,7 @@ public class ClienteServiceTest {
 		do {
 			Results<ClienteDTO> results = null;
 			try {
-				results = clienteService.findBy(criteria, from, pageSize);
+				results = clienteService.findByCriteria(criteria, from, pageSize);
 			} catch (Exception e) {
 				
 				e.printStackTrace();

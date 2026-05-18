@@ -14,7 +14,13 @@ public class GeneroServiceTest {
 	}
 
 	public void testFindById() {
-		Genero genero = service.findById(1L);
+		Genero genero = null;
+		try {
+			genero = service.findById(1L);
+		} catch (Exception e) {
+		
+			e.printStackTrace();
+		}
 		if (genero != null) {
 			System.out.println("Género encontrado: " + genero.getNombre());
 			System.out.println("  ID: " + genero.getId());
@@ -25,7 +31,13 @@ public class GeneroServiceTest {
 	}
 
 	public void testFindAll() {
-		List<Genero> resultados = service.findAll();
+		List<Genero> resultados = null;
+		try {
+			resultados = service.findAll();
+		} catch (Exception e) {
+			
+			e.printStackTrace();
+		}
 		if (resultados != null && !resultados.isEmpty()) {
 			System.out.println("Géneros encontrados: " + resultados.size());
 			for (Genero g : resultados) {

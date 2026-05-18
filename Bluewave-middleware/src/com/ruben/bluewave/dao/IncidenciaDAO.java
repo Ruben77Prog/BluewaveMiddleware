@@ -103,7 +103,6 @@ public class IncidenciaDAO {
 			List<String> condiciones = new ArrayList<>();
 			List<Object> parametros = new ArrayList<>();
 
-			// Filtros básicos
 			SQLUtils.addClause(criteria.getId(), condiciones, " i.id = ? ", parametros, criteria.getId());
 			if (criteria.getId() == null) {
 				SQLUtils.addClause(criteria.getNumeroIncidencia(), condiciones, " i.numero_incidencia LIKE ? ",
@@ -118,22 +117,11 @@ public class IncidenciaDAO {
 						parametros, criteria.getEstadoIncidenciaId());
 			}
 
-			// Filtros por campos de tablas relacionadas (todos con INNER JOIN)
 			SQLUtils.addClause(criteria.getContratoNumero(), condiciones, " con.numero_contrato LIKE ? ", parametros,
 					"%" + criteria.getContratoNumero() + "%");
 			SQLUtils.addClause(criteria.getClienteNombre(), condiciones, " UPPER(c.nombre) LIKE UPPER(?) ", parametros,
 					"%" + criteria.getClienteNombre() + "%");
 
-			// Filtro por nombre de empleado asignado (en nombre o apellido)
-			if (criteria.getEmpleadoAsignadoNombre() != null
-					&& !criteria.getEmpleadoAsignadoNombre().trim().isEmpty()) {
-				condiciones.add(" (UPPER(emp_asig.nombre) LIKE UPPER(?) OR UPPER(emp_asig.apellido1) LIKE UPPER(?)) ");
-				String like = "%" + criteria.getEmpleadoAsignadoNombre() + "%";
-				parametros.add(like);
-				parametros.add(like);
-			}
-
-			// Filtros de fecha
 			if (criteria.getFechaDesde() != null) {
 				condiciones.add(" i.fecha_incidencia >= ? ");
 				parametros.add(new java.sql.Timestamp(criteria.getFechaDesde().getTime()));
@@ -147,11 +135,9 @@ public class IncidenciaDAO {
 				sqlBuilder.append(" WHERE ").append(String.join(" AND ", condiciones));
 			}
 
-			// Ordenación
 			sqlBuilder.append(" ORDER BY ").append(criteria.getOrderBy());
 			sqlBuilder.append(Boolean.FALSE.equals(criteria.getAscDesc()) ? " DESC " : " ASC ");
 
-			// Paginación con LIMIT y OFFSET
 			String sqlPaginado = sqlBuilder.toString() + " LIMIT ? OFFSET ?";
 			ps = c.prepareStatement(sqlPaginado);
 
@@ -169,13 +155,12 @@ public class IncidenciaDAO {
 			}
 			results.setPage(pageList);
 
+			// COUNT
 			StringBuilder countBuilder = new StringBuilder("SELECT COUNT(*) FROM incidencia i ");
 			countBuilder.append("INNER JOIN tipo_incidencia ti ON i.tipo_incidencia_id = ti.id ")
 					.append("INNER JOIN estado_incidencia ei ON i.estado_incidencia_id = ei.id ")
 					.append("INNER JOIN contrato con ON i.contrato_id = con.id ")
-					.append("INNER JOIN cliente c ON con.cliente_id = c.id ")
-					.append("INNER JOIN empleado creador ON i.creado_por_empleado_id = creador.id ");
-
+					.append("INNER JOIN cliente c ON con.cliente_id = c.id ");
 			if (!condiciones.isEmpty()) {
 				countBuilder.append(" WHERE ").append(String.join(" AND ", condiciones));
 			}
@@ -193,7 +178,6 @@ public class IncidenciaDAO {
 			results.setTotal(total);
 
 			return results;
-
 		} catch (Exception e) {
 			e.printStackTrace();
 			results.setPage(new ArrayList<>());
@@ -234,18 +218,15 @@ public class IncidenciaDAO {
 	}
 
 	public Incidencia create(Connection c, Incidencia incidencia) {
-
 		PreparedStatement ps = null;
 		ResultSet rs = null;
-
 		try {
-
 			StringBuilder sql = new StringBuilder();
 			sql.append("INSERT INTO incidencia (numero_incidencia, titulo, descripcion, ");
 			sql.append("fecha_incidencia, fecha_resolucion, horas_estimadas, horas_reales, ");
 			sql.append("coste_reparacion, tipo_incidencia_id, contrato_id, estado_incidencia_id, ");
-			sql.append("empleado_asignado_id, creado_por_empleado_id, fecha_creacion) ");
-			sql.append("VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+			sql.append("creado_por_empleado_id, fecha_creacion) ");
+			sql.append("VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
 			ps = c.prepareStatement(sql.toString(), Statement.RETURN_GENERATED_KEYS);
 
@@ -267,7 +248,6 @@ public class IncidenciaDAO {
 			ps.setLong(i++, incidencia.getTipoIncidenciaId());
 			ps.setLong(i++, incidencia.getContratoId());
 			ps.setLong(i++, incidencia.getEstadoIncidenciaId());
-			ps.setLong(i++, incidencia.getEmpleadoAsignadoId());
 			ps.setLong(i++, incidencia.getCreadorEmpleadoId());
 			ps.setTimestamp(i++, new java.sql.Timestamp(System.currentTimeMillis()));
 
@@ -278,31 +258,25 @@ public class IncidenciaDAO {
 				incidencia.setId(rs.getLong(1));
 			}
 			return incidencia;
-
 		} catch (Exception e) {
 			e.printStackTrace();
+			return null;
 		} finally {
 			JDBCUtils.close(rs, ps);
 		}
-		return null;
 	}
 
 	public boolean update(Connection c, Incidencia incidencia) {
-		if (incidencia == null || incidencia.getId() == null) {
+		if (incidencia == null || incidencia.getId() == null)
 			return false;
-		}
-
 		PreparedStatement ps = null;
-
 		try {
-
 			StringBuilder sql = new StringBuilder();
 			sql.append("UPDATE incidencia SET ");
 			sql.append("numero_incidencia = ?, titulo = ?, descripcion = ?, ");
 			sql.append("fecha_incidencia = ?, fecha_resolucion = ?, horas_estimadas = ?, ");
 			sql.append("horas_reales = ?, coste_reparacion = ?, tipo_incidencia_id = ?, ");
-			sql.append(
-					"contrato_id = ?, estado_incidencia_id = ?, empleado_asignado_id = ?, creado_por_empleado_id = ?, ");
+			sql.append("contrato_id = ?, estado_incidencia_id = ?, creado_por_empleado_id = ?, ");
 			sql.append("fecha_actualizacion = ? WHERE id = ?");
 
 			ps = c.prepareStatement(sql.toString());
@@ -325,44 +299,32 @@ public class IncidenciaDAO {
 			ps.setLong(i++, incidencia.getTipoIncidenciaId());
 			ps.setLong(i++, incidencia.getContratoId());
 			ps.setLong(i++, incidencia.getEstadoIncidenciaId());
-			ps.setLong(i++, incidencia.getEmpleadoAsignadoId());
 			ps.setLong(i++, incidencia.getCreadorEmpleadoId());
 			ps.setTimestamp(i++, new java.sql.Timestamp(System.currentTimeMillis()));
 			ps.setLong(i++, incidencia.getId());
 
 			return ps.executeUpdate() > 0;
-
 		} catch (Exception e) {
 			e.printStackTrace();
+			return false;
 		} finally {
 			JDBCUtils.close(null, ps);
 		}
-		return false;
 	}
 
 	public boolean delete(Connection c, Long id) {
-		if (id == null) {
-			return false;
-		}
 
 		PreparedStatement ps = null;
-
 		try {
-
-			StringBuilder sql = new StringBuilder();
-			sql.append("DELETE FROM incidencia WHERE id = ?");
-
-			ps = c.prepareStatement(sql.toString());
+			ps = c.prepareStatement("DELETE FROM incidencia WHERE id = ?");
 			ps.setLong(1, id);
-
 			return ps.executeUpdate() > 0;
-
 		} catch (Exception e) {
 			e.printStackTrace();
+			return false;
 		} finally {
 			JDBCUtils.close(null, ps);
 		}
-		return false;
 	}
 
 	private IncidenciaDTO loadNext(ResultSet rs) throws Exception {

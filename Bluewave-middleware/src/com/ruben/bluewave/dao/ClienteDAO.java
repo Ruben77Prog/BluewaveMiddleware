@@ -261,19 +261,13 @@ public class ClienteDAO {
 	}
 
 	public boolean update(Connection c, Cliente cliente) {
-		if (cliente == null || cliente.getId() == null) {
-			return false;
-		}
-
 		PreparedStatement ps = null;
-
 		try {
-
 			StringBuilder sql = new StringBuilder();
 			sql.append("UPDATE cliente SET ");
 			sql.append("nombre = ?, apellido1 = ?, apellido2 = ?, dni = ?, telefono = ?, ");
 			sql.append("telefono2 = ?, telefono3 = ?, email = ?, fecha_nacimiento = ?, ");
-			sql.append("fecha_creacion = ?, fecha_baja = ?, estado_cliente_id = ?, direccion_id = ?, ");
+			sql.append("fecha_baja = ?, estado_cliente_id = ?, direccion_id = ?, ");
 			sql.append("empleado_asignado_id = ?, genero_id = ? ");
 			sql.append("WHERE id = ?");
 
@@ -288,29 +282,53 @@ public class ClienteDAO {
 			ps.setString(i++, cliente.getTelefono2());
 			ps.setString(i++, cliente.getTelefono3());
 			ps.setString(i++, cliente.getEmail());
-			ps.setDate(i++,
-					cliente.getFechaNacimiento() != null ? new java.sql.Date(cliente.getFechaNacimiento().getTime())
-							: null);
-			ps.setDate(i++,
-					cliente.getFechaAlta() != null ? new java.sql.Date(cliente.getFechaAlta().getTime()) : null);
-			ps.setDate(i++,
-					cliente.getFechaBaja() != null ? new java.sql.Date(cliente.getFechaBaja().getTime()) : null);
 
-			ps.setLong(i++, cliente.getEstadoClienteId());
-			ps.setLong(i++, cliente.getDireccionId());
-			ps.setLong(i++, cliente.getEmpleadoAsignadoId());
-			ps.setLong(i++, cliente.getGeneroId());
+			if (cliente.getFechaNacimiento() != null) {
+				ps.setDate(i++, new java.sql.Date(cliente.getFechaNacimiento().getTime()));
+			} else {
+				ps.setDate(i++, null);
+			}
+
+			if (cliente.getFechaBaja() != null) {
+				ps.setDate(i++, new java.sql.Date(cliente.getFechaBaja().getTime()));
+			} else {
+				ps.setDate(i++, null);
+			}
+
+			if (cliente.getEstadoClienteId() != null) {
+				ps.setLong(i++, cliente.getEstadoClienteId());
+			} else {
+				ps.setLong(i++, 1L);
+			}
+
+			if (cliente.getDireccionId() != null) {
+				ps.setLong(i++, cliente.getDireccionId());
+			} else {
+				ps.setNull(i++, java.sql.Types.BIGINT);
+			}
+
+			if (cliente.getEmpleadoAsignadoId() != null) {
+				ps.setLong(i++, cliente.getEmpleadoAsignadoId());
+			} else {
+				ps.setLong(i++, 1L);
+			}
+
+			if (cliente.getGeneroId() != null) {
+				ps.setLong(i++, cliente.getGeneroId());
+			} else {
+				ps.setLong(i++, 1L);
+			}
+
 			ps.setLong(i++, cliente.getId());
 
 			int rows = ps.executeUpdate();
 			return rows > 0;
-
 		} catch (Exception e) {
 			e.printStackTrace();
+			return false;
 		} finally {
 			JDBCUtils.close(null, ps);
 		}
-		return false;
 	}
 
 	public boolean updatePassword(Connection c, Long id, String password) {

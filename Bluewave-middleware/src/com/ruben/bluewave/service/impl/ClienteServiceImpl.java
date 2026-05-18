@@ -31,10 +31,10 @@ public class ClienteServiceImpl implements ClienteService {
 
 	@Override
 	public Long create(Cliente cliente) throws Exception {
-		
+
 		Connection c = null;
 		boolean commit = false;
-		
+
 		try {
 			c = JDBCUtils.getConnection();
 			c.setAutoCommit(false);
@@ -61,7 +61,7 @@ public class ClienteServiceImpl implements ClienteService {
 						"Hola " + clienteCreado.getNombre());
 			} catch (Exception e) {
 				logger.error("Error al enviar email de bienvenida a: {}", clienteCreado.getEmail(), e);
-			
+
 			}
 
 			commit = true;
@@ -78,15 +78,14 @@ public class ClienteServiceImpl implements ClienteService {
 
 	@Override
 	public Cliente login(Cliente cliente) throws Exception {
-		
 
 		Connection c = null;
 		boolean commit = false;
-		
+
 		try {
 			c = JDBCUtils.getConnection();
 			c.setAutoCommit(false);
-			
+
 			List<Cliente> clientes = clienteDAO.findByEmail(c, cliente.getEmail());
 
 			if (clientes == null || clientes.isEmpty()) {
@@ -96,8 +95,7 @@ public class ClienteServiceImpl implements ClienteService {
 
 			Cliente clienteEncontrado = clientes.get(0);
 
-			if (encryptionService.checkEncription(cliente.getContrasena(),
-					clienteEncontrado.getContrasena())) {
+			if (encryptionService.checkEncription(cliente.getContrasena(), clienteEncontrado.getContrasena())) {
 				logger.info("Login exitoso para email: {}", cliente.getEmail());
 				commit = true;
 				return clienteEncontrado;
@@ -116,19 +114,18 @@ public class ClienteServiceImpl implements ClienteService {
 
 	@Override
 	public List<Cliente> findByEmail(String email) throws Exception {
-		
 
 		Connection c = null;
 		boolean commit = false;
-		
+
 		try {
 			c = JDBCUtils.getConnection();
 			c.setAutoCommit(false);
-			
+
 			List<Cliente> result = clienteDAO.findByEmail(c, email);
 			commit = true;
 			return result;
-			
+
 		} catch (Exception e) {
 			logger.error("Error buscando cliente por email {}: {}", email, e.getMessage(), e);
 			throw e;
@@ -139,19 +136,18 @@ public class ClienteServiceImpl implements ClienteService {
 
 	@Override
 	public ClienteDTO findById(Long id) throws Exception {
-		
 
 		Connection c = null;
 		boolean commit = false;
-		
+
 		try {
 			c = JDBCUtils.getConnection();
 			c.setAutoCommit(false);
-			
+
 			ClienteDTO result = clienteDAO.findById(c, id);
 			commit = true;
 			return result;
-			
+
 		} catch (Exception e) {
 			logger.error("Error buscando cliente por id {}: {}", id, e.getMessage(), e);
 			throw e;
@@ -162,23 +158,22 @@ public class ClienteServiceImpl implements ClienteService {
 
 	@Override
 	public Results<ClienteDTO> findByCriteria(ClienteCriteria criteria, int from, int pageSize) throws Exception {
-		
 
 		Connection c = null;
 		boolean commit = false;
-		
+
 		try {
 			if (clienteDAO == null) {
 				clienteDAO = new ClienteDAO();
 			}
-			
+
 			c = JDBCUtils.getConnection();
 			c.setAutoCommit(false);
-			
+
 			Results<ClienteDTO> results = clienteDAO.findByCriteria(c, criteria, from, pageSize);
 			commit = true;
 			return results;
-			
+
 		} catch (Exception e) {
 			logger.error("Error en findBy con criteria {}: {}", criteria, e.getMessage(), e);
 			throw e;
@@ -187,32 +182,28 @@ public class ClienteServiceImpl implements ClienteService {
 		}
 	}
 
-	
-
 	@Override
 	public boolean update(Cliente cliente) throws Exception {
-		
-
+		if (cliente == null || cliente.getId() == null) {
+			logger.warn("Intento de actualizar cliente con id nulo o nulo");
+			return false;
+		}
 		Connection c = null;
 		boolean commit = false;
-		
 		try {
 			c = JDBCUtils.getConnection();
 			c.setAutoCommit(false);
-			
-			boolean result = clienteDAO.update(c, cliente);
-			
-			if (result) {
-				logger.info("Cliente actualizado exitosamente con id: {}", cliente.getId());
+
+			boolean actualizado = clienteDAO.update(c, cliente);
+			if (actualizado) {
 				commit = true;
+				logger.info("Cliente actualizado con id: {}", cliente.getId());
 			} else {
 				logger.warn("No se actualizó el cliente con id: {}", cliente.getId());
 			}
-			
-			return result;
-			
+			return actualizado;
 		} catch (Exception e) {
-			logger.error("Error actualizando cliente con id {}: {}", cliente.getId(), e.getMessage(), e);
+			logger.error("Error actualizando cliente id {}: {}", cliente.getId(), e.getMessage(), e);
 			throw e;
 		} finally {
 			JDBCUtils.close(c, commit);
@@ -221,15 +212,14 @@ public class ClienteServiceImpl implements ClienteService {
 
 	@Override
 	public boolean updatePassword(Long id, String oldPassword, String newPassword) throws Exception {
-		
 
 		Connection c = null;
 		boolean commit = false;
-		
+
 		try {
 			c = JDBCUtils.getConnection();
 			c.setAutoCommit(false);
-			
+
 			ClienteDTO cliente = clienteDAO.findById(c, id);
 
 			if (cliente == null) {
@@ -254,7 +244,7 @@ public class ClienteServiceImpl implements ClienteService {
 				logger.info("Contraseña actualizada exitosamente para cliente id: {}", id);
 				commit = true;
 			}
-			
+
 			return result;
 
 		} catch (Exception e) {
@@ -267,26 +257,25 @@ public class ClienteServiceImpl implements ClienteService {
 
 	@Override
 	public boolean delete(Cliente cliente) throws Exception {
-		
 
 		Connection c = null;
 		boolean commit = false;
-		
+
 		try {
 			c = JDBCUtils.getConnection();
 			c.setAutoCommit(false);
-			
+
 			boolean delete = clienteDAO.delete(c, cliente.getId());
-			
+
 			if (delete) {
 				logger.info("Cliente eliminado exitosamente con id: {}", cliente.getId());
 				commit = true;
 			} else {
 				logger.warn("No se eliminó el cliente con id: {}", cliente.getId());
 			}
-			
+
 			return delete;
-			
+
 		} catch (Exception e) {
 			logger.error("Error eliminando cliente con id {}: {}", cliente.getId(), e.getMessage(), e);
 			throw e;

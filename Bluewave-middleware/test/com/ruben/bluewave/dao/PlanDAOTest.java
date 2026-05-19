@@ -38,7 +38,7 @@
 //			// List<Plan> resultados = dao.findBy(null, "ad", "a", 20d, 2l);
 //
 //			PlanCriteria criteria = new PlanCriteria();
-//			criteria.setNombre("a"); 
+//			criteria.setNombre("a");
 //			criteria.setPrecioDesde(10d);
 //			criteria.setPrecioHasta(50d);
 //

@@ -19,17 +19,11 @@ import com.ruben.bluewave.util.SQLUtils;
 public class EmpleadoDAO {
 
 	private static Logger logger = LogManager.getLogger(EmpleadoDAO.class.getName());
+	private static final String BASE_QUERY = "SELECT e.id, e.nombre, e.apellido1, e.apellido2, e.dni, e.telefono, "
+			+ "e.email, e.password, e.fecha_creacion, e.fecha_baja, e.ultimo_login, e.activo, "
+			+ "e.rol_id, e.genero_id, e.direccion_id, " + "r.nombre AS rol_nombre, " + "g.nombre AS genero_nombre "
+			+ "FROM empleado e " + "LEFT JOIN rol r ON e.rol_id = r.id " + "LEFT JOIN genero g ON e.genero_id = g.id";
 
-	private static final String BASE_QUERY = 
-		    "SELECT e.id, e.nombre, e.apellido1, e.apellido2, e.dni, e.telefono, "
-		    + "e.email, e.password, e.fecha_creacion, e.fecha_baja, e.ultimo_login, e.activo, "
-		    + "e.rol_id, e.genero_id, e.direccion_id, "
-		    + "r.nombre AS rol_nombre, "
-		    + "g.nombre AS genero_nombre "
-		    + "FROM empleado e "
-		    + "LEFT JOIN rol r ON e.rol_id = r.id "
-		    + "LEFT JOIN genero g ON e.genero_id = g.id";
-	
 	public EmpleadoDAO() {
 	}
 
@@ -152,67 +146,65 @@ public class EmpleadoDAO {
 					criteria.getDireccionId());
 
 			if (!condiciones.isEmpty()) {
-	            sql.append(" WHERE ").append(String.join(" AND ", condiciones));
-	        }
+				sql.append(" WHERE ").append(String.join(" AND ", condiciones));
+			}
 
-	        
-	        sql.append(" ORDER BY ").append(criteria.getOrderBy());
-	        sql.append(Boolean.FALSE.equals(criteria.getAscDesc()) ? " DESC " : " ASC ");
+			sql.append(" ORDER BY ").append(criteria.getOrderBy());
+			sql.append(Boolean.FALSE.equals(criteria.getAscDesc()) ? " DESC " : " ASC ");
 
-	       
-	        sql.append(" LIMIT ? OFFSET ? ");
-	        params.add(pageSize);
-	        params.add(from);
+			sql.append(" LIMIT ? OFFSET ? ");
+			params.add(pageSize);
+			params.add(from);
 
-	        logger.debug("SQL: " + sql.toString());
-	        logger.debug("Params: " + params);
+			logger.debug("SQL: " + sql.toString());
+			logger.debug("Params: " + params);
 
-	        ps = c.prepareStatement(sql.toString());
-	        int idx = 1;
-	        for (Object p : params) {
-	            ps.setObject(idx++, p);
-	        }
+			ps = c.prepareStatement(sql.toString());
+			int idx = 1;
+			for (Object p : params) {
+				ps.setObject(idx++, p);
+			}
 
-	        rs = ps.executeQuery();
-	        List<EmpleadoDTO> resultados = new ArrayList<>();
-	        while (rs.next()) {
-	            resultados.add(loadNext(rs));
-	        }
-	        results.setPage(resultados);
+			rs = ps.executeQuery();
+			List<EmpleadoDTO> resultados = new ArrayList<>();
+			while (rs.next()) {
+				resultados.add(loadNext(rs));
+			}
+			results.setPage(resultados);
 
-	        
-	        StringBuilder countSql = new StringBuilder("SELECT COUNT(*) FROM empleado e ");
-	     
-	        if (!condiciones.isEmpty()) {
-	            countSql.append(" WHERE ").append(String.join(" AND ", condiciones));
-	        }
+			StringBuilder countSql = new StringBuilder("SELECT COUNT(*) FROM empleado e ");
 
-	        PreparedStatement psCount = c.prepareStatement(countSql.toString());
-	        idx = 1;
-	        for (Object p : params) {
-	            
-	            if (idx <= condiciones.size()) {
-	                psCount.setObject(idx++, p);
-	            }
-	        }
-	        ResultSet rsCount = psCount.executeQuery();
-	        int total = 0;
-	        if (rsCount.next()) {
-	            total = rsCount.getInt(1);
-	        }
-	        results.setTotal(total);
-	        rsCount.close();
-	        psCount.close();
+			if (!condiciones.isEmpty()) {
+				countSql.append(" WHERE ").append(String.join(" AND ", condiciones));
+			}
 
-	        return results;
+			PreparedStatement psCount = c.prepareStatement(countSql.toString());
+			idx = 1;
+			for (Object p : params) {
 
-	    } catch (Exception e) {
-	        logger.error(e.getMessage() + ": " + criteria, e);
-	        return results;
-	    } finally {
-	        JDBCUtils.close(rs, ps);
-	    }
+				if (idx <= condiciones.size()) {
+					psCount.setObject(idx++, p);
+				}
+			}
+			ResultSet rsCount = psCount.executeQuery();
+			int total = 0;
+			if (rsCount.next()) {
+				total = rsCount.getInt(1);
+			}
+			results.setTotal(total);
+			rsCount.close();
+			psCount.close();
+
+			return results;
+
+		} catch (Exception e) {
+			logger.error(e.getMessage() + ": " + criteria, e);
+			return results;
+		} finally {
+			JDBCUtils.close(rs, ps);
+		}
 	}
+
 	public List<EmpleadoDTO> findByDni(Connection c, String dni) {
 
 		PreparedStatement ps = null;
@@ -296,9 +288,24 @@ public class EmpleadoDAO {
 			ps.setString(i++, dto.getPassword());
 			ps.setTimestamp(i++, new java.sql.Timestamp(System.currentTimeMillis()));
 			ps.setBoolean(i++, dto.getActivo() != null ? dto.getActivo() : true);
-			ps.setLong(i++, dto.getRolId());
-			ps.setLong(i++, dto.getGeneroId());
-			ps.setLong(i++, dto.getDireccionId());
+
+			if (dto.getRolId() != null) {
+				ps.setLong(i++, dto.getRolId());
+			} else {
+				ps.setLong(i++, 1L);
+			}
+
+			if (dto.getGeneroId() != null) {
+				ps.setLong(i++, dto.getGeneroId());
+			} else {
+				ps.setLong(i++, 1L);
+			}
+
+			if (dto.getDireccionId() != null) {
+				ps.setLong(i++, dto.getDireccionId());
+			} else {
+				ps.setNull(i++, java.sql.Types.BIGINT);
+			}
 
 			ps.executeUpdate();
 
@@ -343,16 +350,38 @@ public class EmpleadoDAO {
 			ps.setString(i++, dto.getEmail());
 			ps.setString(i++, dto.getPassword());
 
-			ps.setTimestamp(i++,
-					dto.getFechaBaja() != null ? new java.sql.Timestamp(dto.getFechaBaja().getTime()) : null);
+			if (dto.getFechaBaja() != null) {
+				ps.setTimestamp(i++, new java.sql.Timestamp(dto.getFechaBaja().getTime()));
+			} else {
+				ps.setTimestamp(i++, null);
+			}
 
-			ps.setTimestamp(i++,
-					dto.getUltimoLogin() != null ? new java.sql.Timestamp(dto.getUltimoLogin().getTime()) : null);
+			if (dto.getUltimoLogin() != null) {
+				ps.setTimestamp(i++, new java.sql.Timestamp(dto.getUltimoLogin().getTime()));
+			} else {
+				ps.setTimestamp(i++, null);
+			}
 
 			ps.setBoolean(i++, dto.getActivo() != null ? dto.getActivo() : true);
-			ps.setLong(i++, dto.getRolId());
-			ps.setLong(i++, dto.getGeneroId());
-			ps.setLong(i++, dto.getDireccionId());
+
+			if (dto.getRolId() != null) {
+				ps.setLong(i++, dto.getRolId());
+			} else {
+				ps.setLong(i++, 1L);
+			}
+
+			if (dto.getGeneroId() != null) {
+				ps.setLong(i++, dto.getGeneroId());
+			} else {
+				ps.setLong(i++, 1L);
+			}
+
+			if (dto.getDireccionId() != null) {
+				ps.setLong(i++, dto.getDireccionId());
+			} else {
+				ps.setNull(i++, java.sql.Types.BIGINT);
+			}
+
 			ps.setLong(i++, dto.getId());
 
 			return ps.executeUpdate() > 0;
@@ -404,7 +433,9 @@ public class EmpleadoDAO {
 			dto.setFechaBaja(rs.getTimestamp("fecha_baja"));
 			dto.setUltimoLogin(rs.getTimestamp("ultimo_login"));
 			dto.setActivo(rs.getBoolean("activo"));
+			dto.setRolNombre(rs.getString("rol_nombre"));
 			dto.setRolId(rs.getLong("rol_id"));
+			dto.setGeneroNombre(rs.getString("genero_nombre"));
 			dto.setGeneroId(rs.getLong("genero_id"));
 			dto.setDireccionId(rs.getLong("direccion_id"));
 

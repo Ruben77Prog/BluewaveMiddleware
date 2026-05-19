@@ -28,6 +28,8 @@ public class EmpleadoServiceImpl implements EmpleadoService {
 
     @Override
     public Long create(EmpleadoDTO empleado) throws Exception {
+        if (empleado == null) return null;
+        
         Connection c = null;
         boolean commit = false;
         try {
@@ -87,7 +89,6 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         }
     }
 
-  
     @Override
     public List<EmpleadoDTO> findAll() throws Exception {
         Connection c = null;
@@ -106,20 +107,18 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         }
     }
 
- 
-   
-
     @Override
     public boolean update(EmpleadoDTO empleado) throws Exception {
+        if (empleado == null || empleado.getId() == null) {
+            logger.error("Empleado inválido para actualizar");
+            return false;
+        }
+        
         Connection c = null;
         boolean commit = false;
         try {
             c = JDBCUtils.getConnection();
             c.setAutoCommit(false);
-            if (empleado == null || empleado.getId() == null) {
-                logger.error("Empleado inválido para actualizar");
-                return false;
-            }
             boolean actualizado = empleadoDAO.update(c, empleado);
             if (actualizado) {
                 commit = true;
@@ -280,8 +279,6 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         }
     }
 
-   
-   
     @Override
     public List<EmpleadoDTO> findByRol(Long rolId) throws Exception {
         Connection c = null;
@@ -303,6 +300,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             JDBCUtils.close(c, commit);
         }
     }
+
     @Override
     public List<EmpleadoDTO> findActivos() throws Exception {
         Connection c = null;
@@ -320,6 +318,4 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             JDBCUtils.close(c, commit);
         }
     }
-	
-	
 }

@@ -64,7 +64,7 @@ public class PlanDAO {
 	 * @param criteria Los criterios de búsqueda.
 	 * @return Una lista de planes que cumplen con los criterios.
 	 */
-	public List<PlanDTO> findBy(Connection c, PlanCriteria criteria) {
+	public List<PlanDTO> findByCriteria(Connection c, PlanCriteria criteria) {
 
 		PreparedStatement ps = null;
 		ResultSet rs = null;
@@ -116,87 +116,67 @@ public class PlanDAO {
 		return new ArrayList<>();
 	}
 
-	/* CREATE */
-	public Plan create(Connection c, Plan plan) {
+	
+	public PlanDTO create(Connection c, PlanDTO dto) {
+	    PreparedStatement ps = null;
+	    ResultSet rs = null;
+	    try {
+	        String sql = "INSERT INTO plan (nombre, descripcion, precio, duracion_meses, descuento, fecha_creacion, activo, tipo_plan_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+	        ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
 
-		PreparedStatement ps = null;
-		ResultSet rs = null;
+	        int i = 1;
+	        ps.setString(i++, dto.getNombre());
+	        ps.setString(i++, dto.getDescripcion());
+	        ps.setDouble(i++, dto.getPrecio() != null ? dto.getPrecio() : 0.0);
+	        ps.setInt(i++, dto.getDuracionMeses() != null ? dto.getDuracionMeses() : 0);
+	        ps.setDouble(i++, dto.getDescuento() != null ? dto.getDescuento() : 0.0);
+	        ps.setDate(i++, new java.sql.Date(System.currentTimeMillis()));
+	        ps.setBoolean(i++, dto.getActivo() != null ? dto.getActivo() : true);
+	        ps.setLong(i++, dto.getTipoPlanId() != null ? dto.getTipoPlanId() : 1L);
 
-		try {
-
-			StringBuilder sql = new StringBuilder();
-			sql.append(
-					"INSERT INTO plan (nombre, descripcion, precio, duracion_meses, descuento, fecha_creacion, activo, tipo_plan_id) ");
-			sql.append("VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-			ps = c.prepareStatement(sql.toString(), Statement.RETURN_GENERATED_KEYS);
-
-			int i = 1;
-			ps.setString(i++, plan.getNombre());
-			ps.setString(i++, plan.getDescripcion());
-			ps.setDouble(i++, plan.getPrecio());
-			ps.setInt(i++, plan.getDuracionMeses());
-			ps.setDouble(i++, plan.getDescuento());
-			ps.setDate(i++, new java.sql.Date(plan.getFechaCreacion().getTime()));
-			ps.setBoolean(i++, plan.getActivo());
-			ps.setLong(i++, plan.getTipoPlanId());
-
-			ps.executeUpdate();
-
-			rs = ps.getGeneratedKeys();
-			if (rs.next()) {
-				plan.setId(rs.getLong(1));
-			}
-
-			return plan;
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			JDBCUtils.close(rs, ps);
-		}
-		return null;
+	        ps.executeUpdate();
+	        rs = ps.getGeneratedKeys();
+	        if (rs.next()) {
+	            dto.setId(rs.getLong(1));
+	        }
+	        return dto;
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return null;
+	    } finally {
+	        JDBCUtils.close(rs, ps);
+	    }
 	}
 
-	/* UPDATE */
-	public Plan update(Connection c, Plan plan) {
-		if (plan == null || plan.getId() == null)
-			return null;
+	
+	public PlanDTO update(Connection c, PlanDTO dto) {
+	    if (dto == null || dto.getId() == null) return null;
+	    PreparedStatement ps = null;
+	    try {
+	        String sql = "UPDATE plan SET nombre = ?, descripcion = ?, precio = ?, duracion_meses = ?, descuento = ?, activo = ?, tipo_plan_id = ? WHERE id = ?";
+	        ps = c.prepareStatement(sql);
 
-		PreparedStatement ps = null;
+	        int i = 1;
+	        ps.setString(i++, dto.getNombre());
+	        ps.setString(i++, dto.getDescripcion());
+	        ps.setDouble(i++, dto.getPrecio() != null ? dto.getPrecio() : 0.0);
+	        ps.setInt(i++, dto.getDuracionMeses() != null ? dto.getDuracionMeses() : 0);
+	        ps.setDouble(i++, dto.getDescuento() != null ? dto.getDescuento() : 0.0);
+	        ps.setBoolean(i++, dto.getActivo() != null ? dto.getActivo() : true);
+	        ps.setLong(i++, dto.getTipoPlanId() != null ? dto.getTipoPlanId() : 1L);
+	        ps.setLong(i++, dto.getId());
 
-		try {
-
-			StringBuilder sql = new StringBuilder();
-			sql.append("UPDATE plan SET nombre = ?, descripcion = ?, precio = ?, duracion_meses = ?, ");
-			sql.append("descuento = ?, fecha_creacion = ?, activo = ?, tipo_plan_id = ? WHERE id = ?");
-			ps = c.prepareStatement(sql.toString());
-
-			int i = 1;
-			ps.setString(i++, plan.getNombre());
-			ps.setString(i++, plan.getDescripcion());
-			ps.setDouble(i++, plan.getPrecio());
-			ps.setInt(i++, plan.getDuracionMeses());
-			ps.setDouble(i++, plan.getDescuento());
-			ps.setDate(i++, new java.sql.Date(plan.getFechaCreacion().getTime()));
-			ps.setBoolean(i++, plan.getActivo());
-			ps.setLong(i++, plan.getTipoPlanId());
-			ps.setLong(i++, plan.getId());
-
-			int rows = ps.executeUpdate();
-			if (rows > 0) {
-				return plan;
-			}
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			JDBCUtils.close(null, ps);
-		}
-
-		return null;
+	        int rows = ps.executeUpdate();
+	        return rows > 0 ? dto : null;
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return null;
+	    } finally {
+	        JDBCUtils.close(null, ps);
+	    }
 	}
 
-	/* DELETE */
+
 	public boolean delete(Connection c, Long id) {
 		if (id == null)
 			return false;
@@ -229,29 +209,15 @@ public class PlanDAO {
 			plan.setNombre(rs.getString("nombre"));
 			plan.setDescripcion(rs.getString("descripcion"));
 			plan.setPrecio(rs.getDouble("precio"));
-			plan.setPrecioDesde(rs.getDouble("precioDesde"));
-			plan.setPrecioHasta(rs.getDouble("precioHasta"));
-			plan.setDuracionMeses(rs.getInt("duracionMeses"));
-			plan.setDescuento(rs.getDouble("Descuento"));
-			plan.setFechaCreacion(rs.getDate("fechaCreacion"));
-			plan.setFechaDesde(rs.getDate("fechaDesde"));
-			plan.setFechaHasta(rs.getDate("fechaHasta"));
+			plan.setDuracionMeses(rs.getInt("duracion_meses"));
+			plan.setDescuento(rs.getDouble("descuento"));
+			plan.setFechaCreacion(rs.getDate("fecha_creacion"));
 			plan.setActivo(rs.getBoolean("activo"));
-
-			plan.setTipoPlanId(rs.getLong("tipoPlanId"));
-			plan.setTipoPlanNombre(rs.getString("tipoPlanNombre"));
-			plan.setVelocidadNombre(rs.getString("velocidadNombre"));
-			plan.setSubidaNombre(rs.getString("SubidaNombre"));
-			plan.setLimiteDatosNombre(rs.getString("LimiteDatosNombre"));
-
+			plan.setTipoPlanId(rs.getLong("tipo_plan_id"));
 			return plan;
-
 		} catch (SQLException e) {
-
 			e.printStackTrace();
+			return null;
 		}
-
-		return null;
 	}
-
 }

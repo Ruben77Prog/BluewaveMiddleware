@@ -2,7 +2,7 @@ package com.ruben.bluewave.model;
 
 import java.util.Date;
 
-public class Empleado  extends AbstractValueObject{
+public class Empleado extends AbstractValueObject {
 	private Long id;
 	private String nombre;
 	private String apellido1;
@@ -17,6 +17,7 @@ public class Empleado  extends AbstractValueObject{
 	private Boolean activo;
 	private Long rolId;
 	private Long generoId;
+	private Direccion direccion;
 	private Long direccionId;
 
 	public Empleado() {
@@ -132,6 +133,14 @@ public class Empleado  extends AbstractValueObject{
 
 	public void setGeneroId(Long generoId) {
 		this.generoId = generoId;
+	}
+
+	public Direccion getDireccion() {
+		return direccion;
+	}
+
+	public void setDireccion(Direccion direccion) {
+		this.direccion = direccion;
 	}
 
 	public Long getDireccionId() {

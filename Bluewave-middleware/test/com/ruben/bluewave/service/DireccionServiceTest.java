@@ -79,6 +79,25 @@ public class DireccionServiceTest {
         }
     }
 
+    public void testFindAll() {
+        System.out.println();
+        System.out.println("- testFindAll -");
+
+        try {
+            List<Direccion> direcciones = direccionService.findAll();
+            if (direcciones != null && !direcciones.isEmpty()) {
+                System.out.println("Direcciones encontradas: " + direcciones.size());
+                for (Direccion d : direcciones) {
+                    System.out.println("  - ID: " + d.getId() + ", Calle: " + d.getCalle());
+                }
+            } else {
+                System.out.println("No se encontraron direcciones");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public void testUpdate() {
         System.out.println();
         System.out.println("- testUpdate -");
@@ -161,6 +180,7 @@ public class DireccionServiceTest {
         System.out.println("===== DIRECCIÓN SERVICE TEST =====");
         test.testCreateAndFindById();
 //        test.testFindByCriteria();
+//        test.testFindAll();
 //        test.testUpdate();
 //        test.testDelete();
     }

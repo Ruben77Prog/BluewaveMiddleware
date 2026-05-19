@@ -54,86 +54,85 @@ public class ContratoDAO {
 	}
 
 	public Results<ContratoDTO> findByCriteria(Connection c, ContratoCriteria criteria, int from, int pageSize) {
+	    Results<ContratoDTO> results = new Results<>();
+	    PreparedStatement ps = null;
+	    ResultSet rs = null;
 
-		Results<ContratoDTO> results = new Results<>();
+	    try {
+	        StringBuilder sql = new StringBuilder(BASE_QUERY);
+	        List<String> condiciones = new ArrayList<>();
+	        List<Object> params = new ArrayList<>();
 
-		PreparedStatement ps = null;
-		ResultSet rs = null;
+	        SQLUtils.addClause(criteria.getId(), condiciones, " con.id = ? ", params, criteria.getId());
+	        SQLUtils.addClause(criteria.getNumeroContrato(), condiciones, " con.numero_contrato LIKE ? ", params, "%" + criteria.getNumeroContrato() + "%");
+	        SQLUtils.addClause(criteria.getClienteId(), condiciones, " con.cliente_id = ? ", params, criteria.getClienteId());
+	        SQLUtils.addClause(criteria.getPlanId(), condiciones, " con.plan_id = ? ", params, criteria.getPlanId());
+	        SQLUtils.addClause(criteria.getEstadoContratoId(), condiciones, " con.estado_contrato_id = ? ", params, criteria.getEstadoContratoId());
+	        SQLUtils.addClause(criteria.getMetodoPagoId(), condiciones, " con.metodo_pago_id = ? ", params, criteria.getMetodoPagoId());
 
-		try {
+	        if (criteria.getFechaInicioDesde() != null) {
+	            condiciones.add(" con.fecha_inicio >= ? ");
+	            params.add(new java.sql.Date(criteria.getFechaInicioDesde().getTime()));
+	        }
+	        if (criteria.getFechaInicioHasta() != null) {
+	            condiciones.add(" con.fecha_inicio <= ? ");
+	            params.add(new java.sql.Date(criteria.getFechaInicioHasta().getTime()));
+	        }
 
-			StringBuilder sql = new StringBuilder(BASE_QUERY);
+	        if (!condiciones.isEmpty()) {
+	            sql.append(" WHERE ").append(String.join(" AND ", condiciones));
+	        }
 
-			List<String> condiciones = new ArrayList<>();
-			List<Object> params = new ArrayList<>();
+	        sql.append(" ORDER BY ").append(criteria.getOrderBy());
+	        sql.append(Boolean.FALSE.equals(criteria.getAscDesc()) ? " DESC " : " ASC ");
+	        sql.append(" LIMIT ? OFFSET ? ");
+	        params.add(pageSize);
+	        params.add(from);
 
-			SQLUtils.addClause(criteria.getId(), condiciones, " con.id = ? ", params, criteria.getId());
-			SQLUtils.addClause(criteria.getNumeroContrato(), condiciones, " con.numero_contrato LIKE ? ", params,
-					"%" + criteria.getNumeroContrato() + "%");
-			SQLUtils.addClause(criteria.getClienteId(), condiciones, " con.cliente_id = ? ", params,
-					criteria.getClienteId());
-			SQLUtils.addClause(criteria.getPlanId(), condiciones, " con.plan_id = ? ", params, criteria.getPlanId());
-			SQLUtils.addClause(criteria.getEstadoContratoId(), condiciones, " con.estado_contrato_id = ? ", params,
-					criteria.getEstadoContratoId());
-			SQLUtils.addClause(criteria.getMetodoPagoId(), condiciones, " con.metodo_pago_id = ? ", params,
-					criteria.getMetodoPagoId());
+	        ps = c.prepareStatement(sql.toString());
+	        int i = 1;
+	        for (Object p : params) {
+	            ps.setObject(i++, p);
+	        }
 
-			if (criteria.getFechaInicioDesde() != null) {
-				SQLUtils.addClause(true, condiciones, " con.fecha_inicio >= ? ", params,
-						new java.sql.Date(criteria.getFechaInicioDesde().getTime()));
-			}
+	        rs = ps.executeQuery();
+	        List<ContratoDTO> resultados = new ArrayList<>();
+	        while (rs.next()) {
+	            resultados.add(loadNext(rs));
+	        }
+	        results.setPage(resultados);
 
-			if (criteria.getFechaInicioHasta() != null) {
-				SQLUtils.addClause(true, condiciones, " con.fecha_inicio <= ? ", params,
-						new java.sql.Date(criteria.getFechaInicioHasta().getTime()));
-			}
+	        // COUNT query para total
+	        StringBuilder countSql = new StringBuilder("SELECT COUNT(*) FROM contrato con ");
+	        if (!condiciones.isEmpty()) {
+	            countSql.append(" WHERE ").append(String.join(" AND ", condiciones));
+	        }
+	        PreparedStatement psCount = c.prepareStatement(countSql.toString());
+	        i = 1;
+	        for (Object p : params) {
+	            if (i <= condiciones.size()) {
+	                psCount.setObject(i++, p);
+	            }
+	        }
+	        ResultSet rsCount = psCount.executeQuery();
+	        int total = 0;
+	        if (rsCount.next()) {
+	            total = rsCount.getInt(1);
+	        }
+	        results.setTotal(total);
+	        rsCount.close();
+	        psCount.close();
 
-			if (!condiciones.isEmpty()) {
-				sql.append(" WHERE ").append(String.join(" AND ", condiciones));
-			}
+	        return results;
 
-			sql.append(" ORDER BY ").append(criteria.getOrderBy());
-			sql.append(Boolean.FALSE.equals(criteria.getAscDesc()) ? " DESC " : " ASC ");
-
-			ps = c.prepareStatement(sql.toString(), ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-
-			int i = 1;
-			for (Object p : params) {
-				ps.setObject(i++, p);
-			}
-
-			rs = ps.executeQuery();
-
-			List<ContratoDTO> resultados = new ArrayList<>();
-
-			int filaInicial = Math.max(1, from);
-			if (pageSize > 0 && rs.absolute(filaInicial)) {
-				int count = 0;
-				do {
-					resultados.add(loadNext(rs));
-					count++;
-				} while (count < pageSize && rs.next());
-			}
-			int total = 0;
-
-			if (rs.last()) {
-				total = rs.getRow();
-			}
-			results.setPage(resultados);
-			results.setTotal(total);
-
-			return results;
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			JDBCUtils.close(rs, ps);
-		}
-
-		results.setPage(new ArrayList<>());
-		results.setTotal(0);
-
-		return results;
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        results.setPage(new ArrayList<>());
+	        results.setTotal(0);
+	        return results;
+	    } finally {
+	        JDBCUtils.close(rs, ps);
+	    }
 	}
 
 	public ContratoDTO create(Connection c, ContratoDTO contrato) {
@@ -243,38 +242,29 @@ public class ContratoDAO {
 	}
 
 	private ContratoDTO loadNext(ResultSet rs) {
-		try {
-			ContratoDTO contrato = new ContratoDTO();
-
-			contrato.setId(rs.getLong("id"));
-			contrato.setNumeroContrato(rs.getString("numero_contrato"));
-			contrato.setFechaInicio(rs.getDate("fecha_inicio"));
-			contrato.setFechaFin(rs.getDate("fecha_fin"));
-
-			contrato.setCostoInstalacion(rs.getDouble("coste_instalacion"));
-			contrato.setCostoMensual(rs.getDouble("coste_mensual"));
-
-			contrato.setCreadoEn(rs.getTimestamp("fecha_creacion"));
-			contrato.setActualizadoEn(rs.getTimestamp("fecha_actualizacion"));
-
-			contrato.setMetodoPagoId(rs.getLong("metodo_pago_id"));
-			contrato.setMetodoPagoNombre(rs.getString("metodo_pago_nombre"));
-
-			contrato.setClienteId(rs.getLong("cliente_id"));
-			contrato.setClienteNombre(rs.getString("cliente_nombre"));
-			contrato.setClienteApellido(rs.getString("cliente_apellido"));
-
-			contrato.setPlanId(rs.getLong("plan_id"));
-			contrato.setPlanNombre(rs.getString("plan_nombre"));
-
-			contrato.setEstadoContratoId(rs.getLong("estado_contrato_id"));
-			contrato.setEstadoContratoNombre(rs.getString("estado_contrato_nombre"));
-
-			return contrato;
-
-		} catch (Exception e) {
-			e.printStackTrace();
-			return null;
-		}
+	    try {
+	        ContratoDTO contrato = new ContratoDTO();
+	        contrato.setId(rs.getLong("id"));
+	        contrato.setNumeroContrato(rs.getString("numero_contrato"));
+	        contrato.setFechaInicio(rs.getDate("fecha_inicio"));
+	        contrato.setFechaFin(rs.getDate("fecha_fin"));
+	        contrato.setCostoInstalacion(rs.getDouble("coste_instalacion"));
+	        contrato.setCostoMensual(rs.getDouble("coste_mensual"));
+	        contrato.setCreadoEn(rs.getTimestamp("fecha_creacion"));
+	        contrato.setActualizadoEn(rs.getTimestamp("fecha_actualizacion"));
+	        contrato.setMetodoPagoId(rs.getLong("metodo_pago_id"));
+	        contrato.setMetodoPagoNombre(rs.getString("metodo_pago_nombre"));
+	        contrato.setClienteId(rs.getLong("cliente_id"));
+	        contrato.setClienteNombre(rs.getString("cliente_nombre"));
+	        contrato.setClienteApellido(rs.getString("cliente_apellido"));
+	        contrato.setPlanId(rs.getLong("plan_id"));
+	        contrato.setPlanNombre(rs.getString("plan_nombre"));
+	        contrato.setEstadoContratoId(rs.getLong("estado_contrato_id"));
+	        contrato.setEstadoContratoNombre(rs.getString("estado_contrato_nombre"));
+	        return contrato;
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return null;
+	    }
 	}
 }

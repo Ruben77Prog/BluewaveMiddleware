@@ -85,6 +85,30 @@ public class ClienteServiceTest {
 		}
 	}
 
+	
+	public static void testFindAll() {
+	    try {
+	        List<ClienteDTO> clientes = clienteService.findAll();
+	        if (clientes != null && !clientes.isEmpty()) {
+	            System.out.println("Total clientes encontrados: " + clientes.size());
+	            int limite = Math.min(10, clientes.size());
+	            System.out.println("Mostrando los primeros " + limite + " clientes:");
+	            for (int i = 0; i < limite; i++) {
+	                ClienteDTO c = clientes.get(i);
+	                System.out.println("  - ID: " + c.getId() + ", Nombre: " + c.getNombre() + " " + c.getApellido1() + ", Email: " + c.getEmail());
+	            }
+	            if (clientes.size() > limite) {
+	                System.out.println("  ... y " + (clientes.size() - limite) + " más");
+	            }
+	        } else {
+	            System.out.println("No se encontraron clientes");
+	        }
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+	}
+	
+	
 	public static void testFindByCriteria() {
 		ClienteCriteria criteria = new ClienteCriteria();
 		int pageSize = 10;
@@ -206,14 +230,15 @@ public class ClienteServiceTest {
 	}
 
 	public static void main(String[] args) {
-		// testCreate();
+		testCreate();
 		testFindByCriteria();
-		// testFindById();
-		// testFindByEmail();
-		// testLoginOk();
-		// testLoginEmailNoExiste();
-		// testUpdate();
-		// testUpdatePassword();
-		// testDelete();
+		testFindById();
+		testFindByEmail();
+		testLoginOk();
+		testLoginEmailNoExiste();
+		testUpdate();
+		testUpdatePassword();
+		testDelete();
+//		testFindAll();
 	}
 }

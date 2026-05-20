@@ -1,58 +1,43 @@
 package com.ruben.bluewave.model;
 
-public class TipoPlan {
-    private Long id;
-    private String nombre;
-    private String descripcion;
-    private Long velocidadId;
-    private Long subidaId;
-    private Long limiteDatosId;
+public class TipoPlan extends AbstractValueObject {
+	private Long id;
+	private String nombre;
+	private String descripcion;
+	private Integer velocidadMbps;
 
-    public Long getId() {
-        return id;
-    }
+	public TipoPlan() {
+	}
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+	public Long getId() {
+		return id;
+	}
 
-    public String getNombre() {
-        return nombre;
-    }
+	public void setId(Long id) {
+		this.id = id;
+	}
 
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
-    }
+	public String getNombre() {
+		return nombre;
+	}
 
-    public String getDescripcion() {
-        return descripcion;
-    }
+	public void setNombre(String nombre) {
+		this.nombre = nombre;
+	}
 
-    public void setDescripcion(String descripcion) {
-        this.descripcion = descripcion;
-    }
+	public String getDescripcion() {
+		return descripcion;
+	}
 
-    public Long getVelocidadId() {
-        return velocidadId;
-    }
+	public void setDescripcion(String descripcion) {
+		this.descripcion = descripcion;
+	}
 
-    public void setVelocidadId(Long velocidadId) {
-        this.velocidadId = velocidadId;
-    }
+	public Integer getVelocidadMbps() {
+		return velocidadMbps;
+	}
 
-    public Long getSubidaId() {
-        return subidaId;
-    }
-
-    public void setSubidaId(Long subidaId) {
-        this.subidaId = subidaId;
-    }
-
-    public Long getLimiteDatosId() {
-        return limiteDatosId;
-    }
-
-    public void setLimiteDatosId(Long limiteDatosId) {
-        this.limiteDatosId = limiteDatosId;
-    }
+	public void setVelocidadMbps(Integer velocidadMbps) {
+		this.velocidadMbps = velocidadMbps;
+	}
 }

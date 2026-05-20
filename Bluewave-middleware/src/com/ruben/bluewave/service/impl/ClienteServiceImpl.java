@@ -113,6 +113,25 @@ public class ClienteServiceImpl implements ClienteService {
 	}
 
 	@Override
+	public List<ClienteDTO> findAll() throws Exception {
+		Connection c = null;
+		boolean commit = false;
+		try {
+			c = JDBCUtils.getConnection();
+			c.setAutoCommit(false);
+			List<ClienteDTO> clientes = clienteDAO.findAll(c);
+			commit = true;
+			logger.info("Listados {} clientes", clientes != null ? clientes.size() : 0);
+			return clientes;
+		} catch (Exception e) {
+			logger.error("Error listando todos los clientes: {}", e.getMessage(), e);
+			throw e;
+		} finally {
+			JDBCUtils.close(c, commit);
+		}
+	}
+
+	@Override
 	public List<Cliente> findByEmail(String email) throws Exception {
 
 		Connection c = null;

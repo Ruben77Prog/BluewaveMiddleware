@@ -42,6 +42,15 @@ public interface ClienteService {
 	public ClienteDTO findById(Long id) throws Exception;
 
 	/**
+	 * Obtiene una lista con todos los clientes disponibles.
+	 *
+	 * @return una lista de objetos {@code ClienteDTO} con la información de los
+	 *         clientes.
+	 * @throws Exception si ocurre un error durante la obtención de los clientes.
+	 */
+	public List<ClienteDTO> findAll() throws Exception;
+
+	/**
 	 * Modifica los datos de un cliente.
 	 *
 	 * @param cliente
@@ -77,6 +86,4 @@ public interface ClienteService {
 	 */
 	public Results<ClienteDTO> findByCriteria(ClienteCriteria criteria, int from, int pageSize) throws Exception;
 
-	
-	
 }

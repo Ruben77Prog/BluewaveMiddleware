@@ -4,12 +4,13 @@ import java.util.List;
 
 import com.ruben.bluewave.dao.criteria.PlanCriteria;
 import com.ruben.bluewave.model.PlanDTO;
+import com.ruben.bluewave.model.Results;
 
 public interface PlanService {
 
 	PlanDTO findById(Long id) throws Exception;
 
-	List<PlanDTO> findByCriteria(PlanCriteria criteria) throws Exception;
+	Results<PlanDTO> findByCriteria(PlanCriteria criteria, int from, int pageSize) throws Exception;
 
 	List<PlanDTO> findAll() throws Exception;
 

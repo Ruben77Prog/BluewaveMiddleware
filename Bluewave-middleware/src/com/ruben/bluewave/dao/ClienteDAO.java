@@ -203,6 +203,25 @@ public class ClienteDAO {
 		return results;
 	}
 
+	public List<ClienteDTO> findAll(Connection c) {
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		List<ClienteDTO> clientes = new ArrayList<>();
+		try {
+			String sql = BASE_QUERY + " ORDER BY c.id";
+			ps = c.prepareStatement(sql);
+			rs = ps.executeQuery();
+			while (rs.next()) {
+				clientes.add(loadNext(rs));
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			JDBCUtils.close(rs, ps);
+		}
+		return clientes;
+	}
+
 	public Cliente create(Connection c, Cliente cliente) {
 
 		PreparedStatement ps = null;

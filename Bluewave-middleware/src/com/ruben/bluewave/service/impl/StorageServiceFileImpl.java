@@ -9,7 +9,7 @@ import com.ruben.bluewave.service.StorageService;
 
 public class StorageServiceFileImpl implements StorageService {
 	
-	private static final String STORAGE_FOLDER = "c:\\setlisto-storage";
+	private static final String STORAGE_FOLDER = "c:\\bluewave-storage";
 	
 	public StorageServiceFileImpl() {
 		
